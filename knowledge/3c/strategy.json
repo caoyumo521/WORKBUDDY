@@ -1,0 +1,51 @@
+{
+  "industry": "3c",
+  "industry_zh": "3C电子",
+  "page_structure": {
+    "module_order": ["hero", "core_selling", "tech", "feature", "detail", "scenario", "spec_param", "after_sales", "cta"],
+    "typical_length": "9-12 模块",
+    "info_density": "very_high"
+  },
+  "photography_style": {
+    "lighting": "dramatic studio lighting, rim light, neon accents",
+    "angle": "3/4 angle, exploded view for tech modules",
+    "background": "dark gradient or futuristic tech background",
+    "model": "optional, hands-only for scale reference",
+    "detail_shots": "ports, buttons, screen, internal components (exploded view)"
+  },
+  "color_palette": {
+    "tech_dark": "#0A0A0A, #1A1A2E, #16213E",
+    "neon_accent": "#00D9FF, #7B2FF7, #FF006E",
+    "clean_light": "#F8F9FA, #E9ECEF, #DEE2E6"
+  },
+  "prompt_templates": {
+    "hero": "Futuristic product photography of {product_name}, floating on dark gradient background, dramatic rim lighting, neon glow accents, {visual_style} aesthetic, tech magazine quality, 8K, no text overlay",
+    "tech": "Exploded view technical illustration of {product_name}, showing internal components and technology, clean white background, technical drawing style, labeled (no actual text), professional product engineering visualization",
+    "feature": "Close-up feature highlight of {product_name}, shallow depth of field, dramatic lighting on key feature, dark background, premium tech product photography",
+    "scenario": "Lifestyle scene with {product_name} on modern desk setup, warm ambient lighting, minimal Scandinavian interior, product as hero, editorial tech lifestyle photography",
+    "spec_param": "Clean specification infographic layout for {product_name}, minimalist design with {brand_color} accents, professional data visualization style, no actual text (placeholder layout)"
+  },
+  "copywriting": {
+    "selling_point_style": "technical + benefit-driven, specs-first then emotional payoff",
+    "cta_style": "tech-savvy, feature-highlighting",
+    "tone": "confident, precise, premium"
+  },
+  "market_adaptation": {
+    "zh-CN": {
+      "tone": "参数 + 黑科技感",
+      "cta": "立即购买 | 限时首发",
+      "info_density": "very_high"
+    },
+    "en-US": {
+      "tone": "innovation-focused, benefit-driven",
+      "cta": "Buy Now | Learn More",
+      "info_density": "medium"
+    },
+    "ja-JP": {
+      "tone": "精密、匠人精神",
+      "cta": "今すぐ購入",
+      "info_density": "high"
+    }
+  },
+  "reference_brands": ["apple", "sony", "samsung", "dji"]
+}

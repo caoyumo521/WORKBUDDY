@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-slate-800 antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-1 px-4 h-9 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-secondary {
+    @apply btn bg-white border border-slate-200 text-slate-700 hover:bg-slate-50;
+  }
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100;
+  }
+  .btn-danger {
+    @apply btn bg-rose-500 text-white hover:bg-rose-600;
+  }
+  .input {
+    @apply w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500;
+  }
+  .select {
+    @apply w-full h-10 px-3 pr-8 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 appearance-none bg-no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+  }
+  .textarea {
+    @apply w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-slate-100 shadow-sm;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 h-5 rounded text-xs font-medium;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }

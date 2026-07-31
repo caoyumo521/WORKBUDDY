@@ -1,0 +1,52 @@
+{
+  "industry": "home",
+  "industry_zh": "家居",
+  "page_structure": {
+    "module_order": ["hero", "pain_point", "core_selling", "scenario", "detail", "size_chart", "spec_param", "after_sales", "cta"],
+    "typical_length": "8-11 模块",
+    "info_density": "high"
+  },
+  "photography_style": {
+    "lighting": "natural daylight, warm interior glow, cozy atmosphere",
+    "angle": "lifestyle wide-shot, 45-degree product, top-down for flatlay",
+    "background": "modern home interior, minimalist Scandinavian, cozy living space",
+    "model": "optional, hands-only for usage demonstration",
+    "detail_shots": "material texture, mechanism, control panel, surface finish"
+  },
+  "color_palette": {
+    "cozy_warm": "#F5E6D3, #E8C5A0, #C9A882",
+    "scandi": "#F8F6F0, #E8E4DD, #B5A899",
+    "modern": "#FFFFFF, #F0F0F0, #2C2C2C"
+  },
+  "prompt_templates": {
+    "hero": "Premium home product photography of {product_name}, modern interior setting, natural daylight through window, {visual_style} aesthetic, cozy and aspirational, editorial home magazine quality, 8K, no text overlay",
+    "pain_point": "Relatable illustration of common household problem that {product_name} solves, split before-after composition, warm tones, clean design, no actual text",
+    "core_selling": "Hero product shot of {product_name} highlighting key feature, dramatic studio lighting, clean background, premium home appliance photography, feature highlighted with visual cue (no text)",
+    "scenario": "{product_name} in beautiful modern home interior, Scandinavian decor, warm natural light, lifestyle photography, aspirational living space, {language} cultural context",
+    "detail": "Macro detail shot of {product_name} craftsmanship, material texture, mechanism detail, shallow depth of field, professional product photography, clean background",
+    "spec_param": "Clean specification layout for {product_name}, minimalist infographic style, {brand_color} accents, professional data visualization, placeholder layout (no actual text)"
+  },
+  "copywriting": {
+    "selling_point_style": "lifestyle benefit + functional specs, convenience-first",
+    "cta_style": "practical, value-driven",
+    "tone": "warm, aspirational, practical"
+  },
+  "market_adaptation": {
+    "zh-CN": {
+      "tone": "生活品质提升，实用为先",
+      "cta": "提升生活品质 | 立即购买",
+      "info_density": "high"
+    },
+    "en-US": {
+      "tone": "lifestyle upgrade, convenience-focused",
+      "cta": "Upgrade Your Home | Shop Now",
+      "info_density": "medium"
+    },
+    "ja-JP": {
+      "tone": "生活の質向上、細部へのこだわり",
+      "cta": "今すぐ購入",
+      "info_density": "high"
+    }
+  },
+  "reference_brands": ["dyson", "xiaomi", "muji", "ikea"]
+}

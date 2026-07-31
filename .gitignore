@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+
+# 项目数据
+projects/*/生成图片/
+projects/*/09_导出/
+projects/*/project.json
+detail_studio.db
+
+# 日志
+*.log
+
+# 本地工作记忆与预览缓存（不进共享仓库）
+.workbuddy/
+projects/*/_preview/
+.DS_Store
+
+# 编辑器/OS
+Thumbs.db

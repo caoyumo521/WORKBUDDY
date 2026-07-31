@@ -1,0 +1,17 @@
+{
+  "name": "测试-无线智能洗地机",
+  "industry": "home",
+  "target_market": "中国",
+  "target_platform": "tmall",
+  "language": "zh-CN",
+  "visual_style": "tech",
+  "resolution": "2K",
+  "aspect_ratio": "3:4",
+  "product_name": "无线智能洗地机X1",
+  "product_selling_points": "集吸尘/拖地/自清洁一体；高转速滚刷；大吸力电机",
+  "product_target_audience": "都市白领、家有宠物/小孩的家庭",
+  "product_description": "高转速滚刷+大吸力电机；智能感应脏污；一次加水清洁全屋",
+  "extra_requirements": "风格现代简洁",
+  "module_keys": ["hero","core_selling","scenario","detail","cta"],
+  "module_quantities": {"hero":1,"core_selling":2,"scenario":1,"detail":1,"cta":1}
+}

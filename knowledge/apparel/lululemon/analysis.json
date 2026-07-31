@@ -1,0 +1,60 @@
+{
+  "brand": "lululemon",
+  "industry": "apparel",
+  "product": "Align Pant II",
+  "source_url": "https://www.lululemon.com",
+  "capture_date": "2026-07-30",
+  "tags": ["athleisure", "premium", "minimalist", "lifestyle", "yoga"],
+
+  "page_structure": {
+    "total_modules": 8,
+    "module_order": [
+      "hero - 全屏产品大图 + 品牌名",
+      "lifestyle - 运动场景实拍",
+      "material - 面料科技 Nulu™ 特写",
+      "feature - 高腰/口袋/隐形设计",
+      "detail - 缝线/腰头/面料微观",
+      "scenario - 多场景穿着（瑜伽/日常/跑步）",
+      "size_chart - 尺码表",
+      "cta - 购买引导 + 推荐搭配"
+    ],
+    "info_density": "medium-low",
+    "visual_rhythm": "大图留白 → 细节密集 → 大图留白"
+  },
+
+  "visual_dna": {
+    "color_system": {
+      "primary": "#FFFFFF, #F5F5F5, #E8E8E8",
+      "accent": "#000000, #333333",
+      "model_skin_tones": "diverse, natural"
+    },
+    "typography": {
+      "headline": "sans-serif, ultra-light weight, large size",
+      "body": "sans-serif, regular, small",
+      "cta": "caps, medium weight, underline"
+    },
+    "photography": {
+      "lighting": "bright natural daylight, even soft shadows",
+      "composition": "centered, generous negative space",
+      "model_style": "athletic, confident, natural poses",
+      "background": "white/cream studio or minimal lifestyle"
+    },
+    "layout": {
+      "image_ratio": "3:4 or 1:1",
+      "whitespace_ratio": "40%",
+      "text_density": "low - minimal text on images"
+    }
+  },
+
+  "prompt_analysis": {
+    "hero_prompt": "Premium athleisure product photography, yoga leggings on model, bright white studio background, natural daylight, minimalist aesthetic, athletic confident pose, high-waist design visible, soft even shadows, magazine editorial quality, 8K",
+    "material_prompt": "Extreme macro photography of Nulu fabric texture, showing buttery soft surface, natural light revealing fabric weave, white background, premium textile quality visible, no text",
+    "lifestyle_prompt": "Woman practicing yoga in natural light studio wearing premium leggings, candid moment, bright airy atmosphere, minimalist interior, lifestyle editorial photography"
+  },
+
+  "copywriting_analysis": {
+    "headline_style": "minimal, emotional, feeling-focused (e.g., 'The Feel of Nothing At All')",
+    "selling_point_style": "sensory-first, then technical (e.g., 'Buttery soft' → 'Nulu™ fabric')",
+    "cta_style": "simple, confident (e.g., 'Shop Align')"
+  }
+}

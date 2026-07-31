@@ -1,0 +1,30 @@
+version: "3.9"
+
+# AI 电商详情页工作台 - 未来服务器部署用
+# 本地开发建议直接 start.sh / start.bat
+
+services:
+  backend:
+    build: ./backend
+    container_name: dps-backend
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./projects:/app/projects
+      - ./backend/.env:/app/.env
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8088
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    container_name: dps-frontend
+    ports:
+      - "5173:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    restart: unless-stopped

@@ -1,0 +1,51 @@
+{
+  "industry": "apparel",
+  "industry_zh": "服装",
+  "page_structure": {
+    "module_order": ["hero", "pain_point", "core_selling", "material", "detail", "craft", "scenario", "size_chart", "after_sales", "cta"],
+    "typical_length": "8-12 模块",
+    "info_density": "high"
+  },
+  "photography_style": {
+    "lighting": "soft natural light, golden hour preferred",
+    "angle": "45-degree editorial, straight-on catalog",
+    "background": "clean studio or lifestyle environment",
+    "model": "required for hero and lifestyle modules",
+    "detail_shots": "fabric texture, stitching, buttons, label"
+  },
+  "color_palette": {
+    "warm_tone": "#F5F0EB, #E8D5C4, #C9A88A",
+    "cool_tone": "#1A1A2E, #16213E, #0F3460",
+    "neutral": "#F8F8F8, #E0E0E0, #333333"
+  },
+  "prompt_templates": {
+    "hero": "Luxury fashion editorial photography, {product_name} worn by model, {visual_style} aesthetic, studio lighting with soft shadows, premium fabric texture visible, {language} market style, high-end magazine quality, 8K, no text overlay",
+    "material": "Extreme close-up of {product_name} fabric texture, macro photography showing weave and fiber quality, soft directional lighting, {color} tones, professional textile photography, no text",
+    "detail": "Product detail shot of {product_name}, focusing on stitching and craftsmanship, macro lens, shallow depth of field, premium quality visible, clean background",
+    "scenario": "Lifestyle photography of {product_name} in {scenario_location}, model wearing product naturally, {visual_style} mood, candid editorial style, {language} cultural context",
+    "size_chart": "Clean size chart infographic for {product_name}, measurements in {unit}, minimalist design, {brand_color} accents, professional typography"
+  },
+  "copywriting": {
+    "selling_point_style": "emotional + functional, emphasize comfort and confidence",
+    "cta_style": "direct, urgency-driven",
+    "tone": "aspirational yet accessible"
+  },
+  "market_adaptation": {
+    "zh-CN": {
+      "tone": "感性 + 功能并重，强调穿着体验",
+      "cta": "立即抢购 | 限时优惠",
+      "info_density": "high"
+    },
+    "en-US": {
+      "tone": "aspirational, lifestyle-focused",
+      "cta": "Shop Now | Add to Cart",
+      "info_density": "medium"
+    },
+    "ja-JP": {
+      "tone": "细腻、品质感、含蓄",
+      "cta": "今すぐ購入",
+      "info_density": "high"
+    }
+  },
+  "reference_brands": ["lululemon", "uniqlo", "nike", "zara"]
+}

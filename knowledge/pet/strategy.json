@@ -1,0 +1,45 @@
+{
+  "industry": "pet",
+  "industry_zh": "宠物",
+  "page_structure": {
+    "module_order": ["hero", "pain_point", "core_selling", "feature", "scenario", "material", "qualification", "after_sales", "cta"],
+    "typical_length": "7-10 模块",
+    "info_density": "medium"
+  },
+  "photography_style": {
+    "lighting": "warm, natural daylight, soft and inviting",
+    "angle": "pet-eye-level, close-up for texture",
+    "background": "home environment, outdoor park, cozy interior",
+    "model": "pet + owner interaction shots",
+    "detail_shots": "material texture, safety features, size comparison"
+  },
+  "color_palette": {
+    "warm": "#FFF8F0, #FFE4C4, #D2691E",
+    "natural": "#8B7355, #6B8E23, #F5DEB3",
+    "playful": "#FF6B6B, #4ECDC4, #FFE66D"
+  },
+  "prompt_templates": {
+    "hero": "Warm pet lifestyle photography, {product_name} with cute {pet_type}, natural home environment, soft daylight, {visual_style} aesthetic, emotional and inviting, professional pet product photography, 8K",
+    "pain_point": "Before-and-after style illustration showing pet problem solved by {product_name}, split composition, warm tones, relatable pet owner scenario, no actual text",
+    "scenario": "Happy pet using {product_name} in cozy home setting, natural interaction, warm lighting, candid pet photography, {language} cultural context",
+    "material": "Close-up of {product_name} material texture, showing safety and quality, macro photography, soft lighting, clean background, pet-safe materials highlighted"
+  },
+  "copywriting": {
+    "selling_point_style": "emotional + safety-focused, pet comfort first",
+    "cta_style": "warm, caring, urgency for pet wellbeing",
+    "tone": "friendly, trustworthy, pet-loving"
+  },
+  "market_adaptation": {
+    "zh-CN": {
+      "tone": "温暖、有爱、安全",
+      "cta": "给主子更好的 | 立即购买",
+      "info_density": "medium"
+    },
+    "en-US": {
+      "tone": "pet-parent emotional, safety-first",
+      "cta": "Shop for Your Pet | Add to Cart",
+      "info_density": "medium"
+    }
+  },
+  "reference_brands": ["chewy", "petco", "wildone", "fable"]
+}
