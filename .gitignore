@@ -32,5 +32,15 @@ detail_studio.db
 projects/*/_preview/
 .DS_Store
 
+# 密钥与本地环境配置（绝不入库！）
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# 测试产物
+backend/tests/out*
+
 # 编辑器/OS
 Thumbs.db
