@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate, WizardPayload
+from app.schemas.project import DraftPayload, ProjectCreate, ProjectOut, ProjectUpdate, WizardPayload
 from app.services import project_service
 from app.services.ai_service import analyze_product_image, plan_detail_page
 
@@ -23,25 +23,60 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     return project_service.create_project(db, payload)
 
 
-@router.post("/from-wizard", response_model=ProjectOut)
-async def create_project_from_wizard(payload: WizardPayload, db: Session = Depends(get_db)):
-    """从创建向导直接提交：先调用 AI 规划，再用结果建项目。"""
-    plan = await plan_detail_page(
-        product_name=payload.product_name,
+@router.post("/draft", response_model=ProjectOut)
+def create_project_draft(payload: DraftPayload, db: Session = Depends(get_db)):
+    """快速创建草稿项目，仅做数据库记录和目录创建，不做 AI 规划。
+
+    用于新建向导「上传产品图」阶段：避免每次上传前都等待 LLM。
+    """
+    project_in = ProjectCreate(
+        name=payload.name,
         industry=payload.industry,
         target_market=payload.target_market,
         target_platform=payload.target_platform,
         language=payload.language,
         visual_style=payload.visual_style,
-        selling_points=payload.product_selling_points,
-        target_audience=payload.product_target_audience,
+        resolution=payload.resolution,
+        aspect_ratio=payload.aspect_ratio,
+        product_name=payload.product_name,
+        product_selling_points=payload.product_selling_points,
+        product_target_audience=payload.product_target_audience,
         product_description=payload.product_description,
-        extra=payload.extra_requirements,
+        extra_requirements=payload.extra_requirements,
+        module_plan=[],
     )
+    return project_service.create_project(db, project_in)
 
-    # 用户自选模块优先；没填再用 AI 推荐
-    chosen_keys = payload.module_keys or [m["key"] for m in plan.get("modules", [])]
-    name_map = {m["key"]: m["name_zh"] for m in plan.get("modules", [])}
+
+@router.post("/from-wizard", response_model=ProjectOut)
+async def create_project_from_wizard(payload: WizardPayload, db: Session = Depends(get_db)):
+    """从创建向导最终提交：已有草稿项目则直接更新；否则调用 AI 规划后建项目。"""
+    # 用户已自选模块时，跳过 AI 规划以加快速度
+    if payload.module_keys:
+        chosen_keys = payload.module_keys
+        name_map = {}
+        selling_points = payload.product_selling_points
+        target_audience = payload.product_target_audience
+        visual_direction = ""
+    else:
+        plan = await plan_detail_page(
+            product_name=payload.product_name,
+            industry=payload.industry,
+            target_market=payload.target_market,
+            target_platform=payload.target_platform,
+            language=payload.language,
+            visual_style=payload.visual_style,
+            selling_points=payload.product_selling_points,
+            target_audience=payload.product_target_audience,
+            product_description=payload.product_description,
+            extra=payload.extra_requirements,
+        )
+        chosen_keys = [m["key"] for m in plan.get("modules", [])]
+        name_map = {m["key"]: m["name_zh"] for m in plan.get("modules", [])}
+        selling_points = payload.product_selling_points or plan.get("selling_points", "")
+        target_audience = payload.product_target_audience or plan.get("target_audience", "")
+        visual_direction = "\n[AI 视觉方向] " + (plan.get("visual_direction", "") or "")
+
     module_plan = []
     for k in chosen_keys:
         qty = int(payload.module_quantities.get(k) or 1)
@@ -50,10 +85,6 @@ async def create_project_from_wizard(payload: WizardPayload, db: Session = Depen
             "name_zh": name_map.get(k, k),
             "quantity": max(1, qty),
         })
-
-    selling_points = payload.product_selling_points or plan.get("selling_points", "")
-    target_audience = payload.product_target_audience or plan.get("target_audience", "")
-    visual_direction = plan.get("visual_direction", "")
 
     project_in = ProjectCreate(
         name=payload.name,
@@ -68,7 +99,7 @@ async def create_project_from_wizard(payload: WizardPayload, db: Session = Depen
         product_selling_points=selling_points,
         product_target_audience=target_audience,
         product_description=payload.product_description,
-        extra_requirements=(payload.extra_requirements or "") + "\n[AI 视觉方向] " + visual_direction,
+        extra_requirements=(payload.extra_requirements or "") + visual_direction,
         module_plan=module_plan,
     )
     return project_service.create_project(db, project_in)

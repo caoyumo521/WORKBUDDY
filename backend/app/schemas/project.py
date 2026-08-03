@@ -111,6 +111,23 @@ class GenerateRequest(BaseModel):
 
 
 # ---------- Wizard ----------
+class DraftPayload(BaseModel):
+    """快速创建草稿项目（不上传图片、不做 AI 规划）"""
+    name: str
+    industry: str = ""
+    target_market: str = ""
+    target_platform: str = ""
+    language: str = "zh-CN"
+    visual_style: str = ""
+    resolution: str = "2K"
+    aspect_ratio: str = "3:4"
+    product_name: str = ""
+    product_selling_points: str = ""
+    product_target_audience: str = ""
+    product_description: str = ""
+    extra_requirements: str = ""
+
+
 class WizardPayload(BaseModel):
     """创建项目向导最终提交的数据"""
     name: str

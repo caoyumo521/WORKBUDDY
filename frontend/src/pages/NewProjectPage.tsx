@@ -46,6 +46,8 @@ export default function NewProjectPage() {
   const [params] = useSearchParams()
   const [step, setStep] = useState(Number(params.get('step') || 0))
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadPhase, setUploadPhase] = useState<'idle' | 'creating' | 'uploading' | 'analyzing'>('idle')
   const [productImages, setProductImages] = useState<{ name: string; size: number; url: string }[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [presetModules, setPresetModules] = useState<string[]>([])
@@ -87,29 +89,77 @@ export default function NewProjectPage() {
   async function handleUpload(files: FileList | null) {
     if (!files || !files.length) return
     setUploading(true)
+    setUploadProgress(0)
     try {
-      // 先用临时项目记录图片 -> 这里简化为：先建一个草稿项目再上传
-      // 但更友好的做法是：在向导中先暂存到 session，再在 step5 后创建
-      // 这里走"先创建再上传"的路径
-      const tempProject = await api.createFromWizard({
-        ...s,
-        name: s.name || '草稿-临时项目',
-        module_keys: [],
-        module_quantities: {},
+      // 1) 快速创建/复用草稿项目（不做 AI 规划，避免上传前等待 LLM）
+      let tempId = localStorage.getItem('wizard_temp_project')
+      if (!tempId) {
+        setUploadPhase('creating')
+        const tempProject = await api.createDraft({
+          name: s.name || '草稿-临时项目',
+          industry: s.industry,
+          target_market: s.target_market,
+          target_platform: s.target_platform,
+          language: s.language,
+          visual_style: s.visual_style,
+          resolution: s.resolution,
+          aspect_ratio: s.aspect_ratio,
+          product_name: s.product_name,
+          product_selling_points: s.product_selling_points,
+          product_target_audience: s.product_target_audience,
+          product_description: s.product_description,
+          extra_requirements: s.extra_requirements,
+        })
+        tempId = tempProject.id
+        localStorage.setItem('wizard_temp_project', tempId)
+      }
+
+      // 2) 上传图片（带进度）
+      setUploadPhase('uploading')
+      setUploadProgress(0)
+      const uploaded = await api.upload(tempId, Array.from(files), 'product_image', (pct) => {
+        setUploadProgress(pct)
       })
-      const uploaded = await api.upload(tempProject.id, Array.from(files), 'product_image')
       const enriched = uploaded.map((u: any) => ({
         name: u.file_path.split(/[\\/]/).pop(),
         size: u.file_size,
         url: u.url,
       }))
       setProductImages((prev) => [...prev, ...enriched])
-      // 暂存 project id 到 localStorage，确认时合并
-      localStorage.setItem('wizard_temp_project', tempProject.id)
+
+      // 3) 用首张图自动提炼卖点/描述（可选，失败不阻塞）
+      const firstFile = files[0]
+      if (firstFile) {
+        setUploadPhase('analyzing')
+        try {
+          const analyzed = await api.analyzeImage(
+            {
+              productName: s.product_name || s.name,
+              industry: s.industry,
+              language: s.language,
+              visualStyle: s.visual_style,
+            },
+            firstFile,
+          )
+          patch({
+            product_name: s.product_name || analyzed.description?.split('，')[0]?.slice(0, 20) || s.product_name,
+            product_selling_points: s.product_selling_points || analyzed.selling_points || '',
+            product_description: s.product_description || analyzed.description || '',
+            extra_requirements:
+              (s.extra_requirements ? s.extra_requirements + '\n' : '') +
+              (analyzed.suggested_extra ? `[AI 建议] ${analyzed.suggested_extra}` : ''),
+          })
+        } catch (analyzeErr: any) {
+          // 非致命：图片已保存，卖点可后续手动填写
+          console.warn('AI 提炼卖点失败:', analyzeErr)
+        }
+      }
     } catch (e: any) {
       alert('上传失败：' + e.message)
     } finally {
       setUploading(false)
+      setUploadPhase('idle')
+      setUploadProgress(0)
     }
   }
 
@@ -260,6 +310,8 @@ export default function NewProjectPage() {
               productImages={productImages}
               onUpload={handleUpload}
               uploading={uploading}
+              uploadPhase={uploadPhase}
+              uploadProgress={uploadProgress}
             />
           )}
           {step === 1 && <StepMarket state={s} patch={patch} />}
@@ -308,12 +360,16 @@ function StepProduct({
   productImages,
   onUpload,
   uploading,
+  uploadPhase,
+  uploadProgress,
 }: {
   state: WizardState
   patch: (p: Partial<WizardState>) => void
   productImages: { name: string; size: number; url: string }[]
   onUpload: (files: FileList | null) => void
   uploading: boolean
+  uploadPhase: 'idle' | 'creating' | 'uploading' | 'analyzing'
+  uploadProgress: number
 }) {
   return (
     <div className="space-y-6">
@@ -336,16 +392,32 @@ function StepProduct({
             <div className="text-3xl mb-2">☁️</div>
             <div className="text-sm text-slate-600 mb-1">上传同一款产品图片</div>
             <div className="text-xs text-slate-400 mb-3">支持 JPG / JPEG / PNG / WEBP（最大 10MB / 张）</div>
-            <label className="btn-primary cursor-pointer inline-flex">
-              {uploading ? '上传中…' : '+ 本地上传'}
-              <input
-                type="file"
-                multiple
-                accept=".jpg,.jpeg,.png,.webp"
-                className="hidden"
-                onChange={(e) => onUpload(e.target.files)}
-              />
-            </label>
+            {uploading ? (
+              <div className="w-64">
+                <div className="text-xs text-slate-500 mb-1">
+                  {uploadPhase === 'creating' && '创建草稿项目…'}
+                  {uploadPhase === 'uploading' && `上传中 ${uploadProgress}%…`}
+                  {uploadPhase === 'analyzing' && 'AI 提炼卖点中…'}
+                </div>
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-brand-500 transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <label className="btn-primary cursor-pointer inline-flex">
+                + 本地上传
+                <input
+                  type="file"
+                  multiple
+                  accept=".jpg,.jpeg,.png,.webp"
+                  className="hidden"
+                  onChange={(e) => onUpload(e.target.files)}
+                />
+              </label>
+            )}
           </div>
         </div>
         {productImages.length > 0 && (

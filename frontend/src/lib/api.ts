@@ -128,15 +128,49 @@ export const api = {
   deleteProject: (id: string) => http<{ ok: boolean }>(`/api/projects/${id}`, { method: 'DELETE' }),
   createFromWizard: (data: any) =>
     http<Project>('/api/projects/from-wizard', { method: 'POST', body: JSON.stringify(data) }),
+  createDraft: (data: any) =>
+    http<Project>('/api/projects/draft', { method: 'POST', body: JSON.stringify(data) }),
 
   // Preview sources (for combined preview)
   previewSources: (id: string) => http<any>(`/api/projects/${id}/preview-sources`),
 
   // Upload
-  upload: async (projectId: string, files: File[], assetType = 'product_image') => {
+  upload: async (
+    projectId: string,
+    files: File[],
+    assetType = 'product_image',
+    onProgress?: (percent: number) => void,
+  ) => {
     const fd = new FormData()
     files.forEach((f) => fd.append('files', f))
     fd.append('asset_type', assetType)
+
+    if (onProgress && files.length > 0) {
+      return new Promise<any>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', `/api/upload/project/${projectId}`)
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            onProgress(Math.round((e.loaded / e.total) * 100))
+          }
+        })
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText))
+            } catch {
+              resolve(xhr.responseText)
+            }
+          } else {
+            reject(new Error(xhr.responseText || `HTTP ${xhr.status}`))
+          }
+        })
+        xhr.addEventListener('error', () => reject(new Error('上传网络错误')))
+        xhr.addEventListener('abort', () => reject(new Error('上传已取消')))
+        xhr.send(fd)
+      })
+    }
+
     const r = await fetch(`/api/upload/project/${projectId}`, { method: 'POST', body: fd })
     if (!r.ok) throw new Error(await r.text())
     return r.json()
