@@ -19,11 +19,15 @@
     "neutral": "#F8F8F8, #E0E0E0, #333333"
   },
   "prompt_templates": {
-    "hero": "Luxury fashion editorial photography, {product_name} worn by model, {visual_style} aesthetic, studio lighting with soft shadows, premium fabric texture visible, {language} market style, high-end magazine quality, 8K, no text overlay",
-    "material": "Extreme close-up of {product_name} fabric texture, macro photography showing weave and fiber quality, soft directional lighting, {color} tones, professional textile photography, no text",
-    "detail": "Product detail shot of {product_name}, focusing on stitching and craftsmanship, macro lens, shallow depth of field, premium quality visible, clean background",
-    "scenario": "Lifestyle photography of {product_name} in {scenario_location}, model wearing product naturally, {visual_style} mood, candid editorial style, {language} cultural context",
-    "size_chart": "Clean size chart infographic for {product_name}, measurements in {unit}, minimalist design, {brand_color} accents, professional typography"
+    "hero": "E-commerce hero banner for {product_name}. Cinematic full-bleed composition with the garment as the absolute focal point — floating, draped on a minimal form, or styled flat-lay, NOT a plain model standing still. Soft atmospheric background, generous negative space, premium headline area left blank. {visual_style} aesthetic, {language} market style, high-end editorial magazine quality, 8K, no text overlay, no watermark.",
+    "material": "Extreme macro texture study of {product_name} fabric. Fill the frame with weave, fiber, or surface finish; directional grazing light reveals craftsmanship. Soft {color} tones, shallow depth of field, professional textile photography. No model, no text.",
+    "detail": "Design-driven detail panel for {product_name}. One hero craftsmanship detail (stitching, buttons, collar, bow, print) shown large with elegant shadow and clean background. Macro lens, shallow depth of field, premium quality visible. Layout feels like a magazine close-up, not a flat catalog shot.",
+    "scenario": "Lifestyle scene for {product_name} in {scenario_location}. The garment is naturally integrated into an aspirational moment — on a chair, in a wardrobe flat-lay, or worn with only subtle human presence (hands, silhouette). {visual_style} mood, candid editorial style, {language} cultural context. Avoid a stiff model pose against a white void.",
+    "size_chart": "Clean, designed size-guide panel for {product_name}. Garment shown with a stylized figure or dimensional diagram, thin elegant measurement lines, minimalist infographic aesthetic, {brand_color} accents, generous whitespace. Placeholder for measurements in {unit}, no actual readable text.",
+    "core_selling": "Graphic selling-point panel for {product_name}. Product on one side, 2-4 benefit zones on the other with soft icon-shaped blocks, color blocks, or elegant leader lines. {visual_style} aesthetic, modern DTC brand layout, {language} market. No dense paragraphs, no text.",
+    "craft": "Craftsmanship story panel for {product_name}. Split or layered composition showing raw material + finished garment detail + artisan hand or sewing element. Warm analog texture, {visual_style} mood, magazine photo-essay feel. No text overlay.",
+    "pain_point": "Problem-to-solution panel for {product_name}. Soft before/after or contrast composition: wrinkled vs smooth, dull vs fresh, uncomfortable vs comfortable. Product appears as the solution. {visual_style} tones, relatable but elegant, no text.",
+    "cta": "Final conversion panel for {product_name}. Bold but premium layout: garment hero + prominent rounded CTA block + 1-2 trust micro-badges. {visual_style} background gradient, {language} market style. No garish sale graphics, no text."
   },
   "copywriting": {
     "selling_point_style": "emotional + functional, emphasize comfort and confidence",

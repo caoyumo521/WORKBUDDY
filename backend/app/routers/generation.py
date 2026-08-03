@@ -23,7 +23,7 @@ from app.utils.file_manager import (
     module_dir,
     timestamp_str,
 )
-from app.utils.prompts import COMMON_MODULES, VISUAL_STYLES, build_module_prompt, build_style_lock
+from app.utils.prompts import COMMON_MODULES, VISUAL_STYLES, build_design_guide_block, build_module_prompt, build_style_lock
 
 router = APIRouter(prefix="/api/generation", tags=["generation"])
 
@@ -190,6 +190,18 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
                 unit="cm" if language.startswith("zh") else "inches",
                 pet_type="pet",
             )
+            # 即使走了知识库模板，也要追加：产品描述、卖点、设计感约束、调性锁定
+            # 避免旧模板只出“模特穿着图”或“白底产品图”
+            additions = []
+            if project.product_description:
+                additions.append(f"Product description: {project.product_description}")
+            if project.product_selling_points:
+                additions.append(f"Key selling points to feature in the image: {project.product_selling_points}")
+            design_guide = build_design_guide_block(task.module_key)
+            if design_guide:
+                additions.append(design_guide)
+            if additions:
+                prompt = (prompt.rstrip(". \n") + ". " + " ".join(additions)).strip()
         except (KeyError, IndexError):
             prompt = build_module_prompt(
                 module_key=task.module_key,

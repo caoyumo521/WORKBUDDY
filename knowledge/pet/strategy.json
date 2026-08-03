@@ -19,10 +19,13 @@
     "playful": "#FF6B6B, #4ECDC4, #FFE66D"
   },
   "prompt_templates": {
-    "hero": "Warm pet lifestyle photography, {product_name} with cute {pet_type}, natural home environment, soft daylight, {visual_style} aesthetic, emotional and inviting, professional pet product photography, 8K",
-    "pain_point": "Before-and-after style illustration showing pet problem solved by {product_name}, split composition, warm tones, relatable pet owner scenario, no actual text",
-    "scenario": "Happy pet using {product_name} in cozy home setting, natural interaction, warm lighting, candid pet photography, {language} cultural context",
-    "material": "Close-up of {product_name} material texture, showing safety and quality, macro photography, soft lighting, clean background, pet-safe materials highlighted"
+    "hero": "Pet brand hero banner for {product_name}. Cute {pet_type} gently interacting with the product in a warm home environment, soft daylight, {visual_style} aesthetic. Product is clearly visible and styled as hero, not just a pet snapshot. Emotional and inviting, professional pet product photography, 8K, no text overlay.",
+    "pain_point": "Problem-solution panel for {product_name}. Soft before/after or contrast composition showing the pet issue resolved: anxious vs calm, messy vs tidy, uncomfortable vs cozy. Warm tones, relatable scenario, no actual text.",
+    "scenario": "Pet lifestyle panel for {product_name}. Happy {pet_type} using the product in a cozy home setting, natural interaction, warm lighting, candid pet photography, {language} cultural context. Product remains the focal point.",
+    "material": "Safety detail panel for {product_name}. Macro close-up of material texture showing softness, durability, and pet-safe quality. Soft lighting, clean background, shallow depth of field. No text.",
+    "core_selling": "Pet benefit panel for {product_name}. Product + 2-4 paw-shaped or rounded benefit zones (comfort, safety, easy-clean, vet-approved). Warm playful layout, {visual_style} tones, {language} market. No dense text.",
+    "feature": "Feature highlight panel for {product_name}. Close-up of a key feature (closure, padding, anti-slip base, breathable mesh) with soft warm lighting. Professional product photography, no text.",
+    "cta": "Final conversion panel for {product_name}. Warm layout: happy pet with product + prominent CTA block + trust micro-badges. {visual_style} tones, no text."
   },
   "copywriting": {
     "selling_point_style": "emotional + safety-focused, pet comfort first",

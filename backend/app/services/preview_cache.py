@@ -180,7 +180,8 @@ def _build_and_save(workdir: str, fmt: str, width: int) -> Optional[Path]:
 
     t0 = time.time()
     try:
-        data = _stitch(images, width=width, gap=8, fmt=fmt)
+        # gap=0: 用户要求组合预览图合在一起不要有空隙
+        data = _stitch(images, width=width, gap=0, fmt=fmt)
     except Exception as e:
         logger.error("Stitch failed: %s", e)
         return None

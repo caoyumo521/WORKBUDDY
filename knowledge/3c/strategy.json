@@ -19,11 +19,14 @@
     "clean_light": "#F8F9FA, #E9ECEF, #DEE2E6"
   },
   "prompt_templates": {
-    "hero": "Futuristic product photography of {product_name}, floating on dark gradient background, dramatic rim lighting, neon glow accents, {visual_style} aesthetic, tech magazine quality, 8K, no text overlay",
-    "tech": "Exploded view technical illustration of {product_name}, showing internal components and technology, clean white background, technical drawing style, labeled (no actual text), professional product engineering visualization",
-    "feature": "Close-up feature highlight of {product_name}, shallow depth of field, dramatic lighting on key feature, dark background, premium tech product photography",
-    "scenario": "Lifestyle scene with {product_name} on modern desk setup, warm ambient lighting, minimal Scandinavian interior, product as hero, editorial tech lifestyle photography",
-    "spec_param": "Clean specification infographic layout for {product_name}, minimalist design with {brand_color} accents, professional data visualization style, no actual text (placeholder layout)"
+    "hero": "Tech hero banner for {product_name}. Product floating or placed as hero on a dark gradient background with dramatic rim light and subtle neon glow. Cinematic composition, generous negative space, premium headline area left blank. {visual_style} aesthetic, tech magazine quality, 8K, no text overlay.",
+    "tech": "Technical visualization panel for {product_name}. Exploded view or transparent cutaway showing internal components and technology. Clean background, engineering-drawing aesthetic with ghosted labels (no actual text). Professional product engineering visualization.",
+    "feature": "Feature highlight panel for {product_name}. Close-up of a key feature (port, button, screen, camera) with dramatic lighting and shallow depth of field. Dark background, premium tech product photography, magazine-grade retouching.",
+    "scenario": "Tech lifestyle panel for {product_name}. Product naturally integrated into a modern desk or living setup, warm ambient lighting, minimal Scandinavian interior. Product as hero, hands-only or no human presence. Editorial tech lifestyle photography, {language} cultural context.",
+    "spec_param": "Specification dashboard panel for {product_name}. Clean infographic layout with rounded rectangles, thin iconography, {brand_color} accents, and product peeking from one side. Professional data visualization style, placeholder layout, no actual text.",
+    "core_selling": "Benefit panel for {product_name}. Product + 3-4 visualized selling points (speed, battery, durability, smart features) arranged as clean graphic blocks. {visual_style} aesthetic, modern tech brand layout, {language} market. No dense text.",
+    "detail": "Craft detail panel for {product_name}. Macro shot of surface finish, hinge, mesh, or connector. Crisp reflections, directional light, shallow depth of field. Premium material quality visible, no text.",
+    "cta": "Final conversion panel for {product_name}. Bold tech layout: product hero + glowing CTA block + trust badges. Dark gradient background, {brand_color} accents. No text."
   },
   "copywriting": {
     "selling_point_style": "technical + benefit-driven, specs-first then emotional payoff",

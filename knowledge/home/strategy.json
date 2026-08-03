@@ -19,12 +19,14 @@
     "modern": "#FFFFFF, #F0F0F0, #2C2C2C"
   },
   "prompt_templates": {
-    "hero": "Premium home product photography of {product_name}, modern interior setting, natural daylight through window, {visual_style} aesthetic, cozy and aspirational, editorial home magazine quality, 8K, no text overlay",
-    "pain_point": "Relatable illustration of common household problem that {product_name} solves, split before-after composition, warm tones, clean design, no actual text",
-    "core_selling": "Hero product shot of {product_name} highlighting key feature, dramatic studio lighting, clean background, premium home appliance photography, feature highlighted with visual cue (no text)",
-    "scenario": "{product_name} in beautiful modern home interior, Scandinavian decor, warm natural light, lifestyle photography, aspirational living space, {language} cultural context",
-    "detail": "Macro detail shot of {product_name} craftsmanship, material texture, mechanism detail, shallow depth of field, professional product photography, clean background",
-    "spec_param": "Clean specification layout for {product_name}, minimalist infographic style, {brand_color} accents, professional data visualization, placeholder layout (no actual text)"
+    "hero": "Home living hero banner for {product_name}. Product styled as hero within a beautiful modern interior, natural daylight through window, {visual_style} aesthetic. Aspirational but real, editorial home magazine quality, generous negative space for headline, 8K, no text overlay.",
+    "pain_point": "Problem-solution panel for {product_name}. Soft split composition showing the household problem before and the calm/organized result after. Warm tones, clean design, relatable but elevated, no actual text.",
+    "core_selling": "Benefit panel for {product_name}. Product + 2-4 visualized home benefits (space-saving, easy-clean, quiet, durable) arranged as clean graphic blocks or icon zones. {visual_style} aesthetic, modern home brand layout, {language} market. No dense text.",
+    "scenario": "Home lifestyle panel for {product_name}. Product naturally placed in a beautiful modern home interior, Scandinavian decor, warm natural light, aspirational living space. Hands-only or no human presence, {language} cultural context.",
+    "detail": "Craft detail panel for {product_name}. Macro shot of craftsmanship, material texture, mechanism, or surface finish. Shallow depth of field, professional product photography, clean background. Magazine-grade close-up.",
+    "spec_param": "Specification panel for {product_name}. Minimalist infographic layout with {brand_color} accents, thin iconography, and product peeking from one side. Professional data visualization, placeholder layout, no actual text.",
+    "size_chart": "Dimension guide panel for {product_name}. Product shown with stylized figure, mannequin, or dimensional diagram; thin elegant measurement lines, minimalist design, generous whitespace. No actual readable text.",
+    "cta": "Final conversion panel for {product_name}. Premium home layout: product in lifestyle setting + prominent CTA block + trust badges. {visual_style} tones, no text."
   },
   "copywriting": {
     "selling_point_style": "lifestyle benefit + functional specs, convenience-first",

@@ -125,6 +125,145 @@ ASPECT_RATIOS = [
     {"key": "21:9", "name_zh": "21:9 宽屏"},
 ]
 
+# 模块级「设计感」指导：每个模块该用什么版式、元素、叙事方式。
+# 目标：让 AI 不再只出“模特穿着图”或“白底产品图”，而是生成有信息层级、
+# 有版式构图、有场景叙事的电商详情页分镜。
+MODULE_DESIGN_GUIDE: Dict[str, Dict[str, str]] = {
+    "hero": {
+        "composition": "full-bleed hero banner with cinematic composition; product as the absolute focal point, placed slightly off-center or centrally with strong negative space; avoid a plain model standing still",
+        "visual_elements": "soft atmospheric background (gradient, fabric, natural scene or abstract texture), subtle light rays or lens bloom, elegant product shadow; no cluttered props",
+        "information_hierarchy": "one dominant product, generous whitespace, premium headline area left blank for later text overlay",
+        "mood": "immersive, aspirational, high-end editorial, like the opening frame of a luxury brand campaign",
+        "avoid": "busy backgrounds, multiple models, price tags, hard-sell graphics, cluttered text, snapshot look",
+    },
+    "core_selling": {
+        "composition": "graphic layout: product on one side, visualized benefit icons/blocks on the other; clean grid or asymmetrical editorial layout",
+        "visual_elements": "abstract geometric shapes, soft color blocks, line icons rendered as physical objects, close-up detail callouts with elegant leader lines",
+        "information_hierarchy": "product + 2-4 selling-point zones, each with an icon/shape and a blank caption area; clear visual rhythm",
+        "mood": "confident, benefit-driven, modern DTC brand look",
+        "avoid": "plain product-only shot, unstructured collage, tiny unreadable labels, crowded corners",
+    },
+    "scenario": {
+        "composition": "wide lifestyle scene where the product sits naturally within a desirable moment; rule-of-thirds, environmental storytelling",
+        "visual_elements": "authentic interior or outdoor setting, natural props that match the product, soft bokeh, human presence only as subtle interaction (hands, silhouette) rather than a full model pose",
+        "information_hierarchy": "environment first, product as the hero within the scene; blank upper or lower area for scene caption",
+        "mood": "relatable, aspirational, solution-oriented — show the life the product enables",
+        "avoid": "white background, product floating in void, stiff model pose, unrelated stock scenery",
+    },
+    "detail": {
+        "composition": "macro or close-up filling most of the frame; extreme detail of fabric weave, stitching, hardware, texture, or material finish",
+        "visual_elements": "shallow depth of field, directional light grazing the surface to reveal texture, subtle reflection, soft gradient backdrop",
+        "information_hierarchy": "one hero detail with possible secondary detail inset; no text, let material speak",
+        "mood": "craftsmanship, precision, tactile quality, premium materials",
+        "avoid": "full product flat lay, softbox glare, oversaturated colors, blurry details",
+    },
+    "sku": {
+        "composition": "organized product matrix or color lineup on a continuous surface; consistent angle and lighting across all variants",
+        "visual_elements": "identical soft background, neatly spaced variants (colors/sizes/styles), subtle shadows grounding each item",
+        "information_hierarchy": "grid of 3-6 variants, visually aligned, equal visual weight; blank labels implied by spacing",
+        "mood": "clean, decisive, easy to shop, like a curated lookbook spread",
+        "avoid": "random angles, mismatched lighting, overlapping items, chaotic collage",
+    },
+    "size_chart": {
+        "composition": "product shown with a stylized figure, mannequin, or dimensional diagram; generous negative space for measurements",
+        "visual_elements": "thin elegant measurement lines, soft human silhouette or wireframe mannequin, product worn or placed beside the scale reference",
+        "information_hierarchy": "product + scale reference + clean annotation zones; numbers should feel spacious",
+        "mood": "helpful, trustworthy, minimalist technical illustration",
+        "avoid": "cramped tables, realistic faces on models, distorted proportions, heavy grids",
+    },
+    "spec_param": {
+        "composition": "information-graphics layout: product image integrated into a clean grid of spec blocks; modern dashboard feel",
+        "visual_elements": "rounded rectangles, thin iconography, subtle separators, consistent accent color, product peeking from one side",
+        "information_hierarchy": "product photo + 4-6 spec zones (material, weight, dimensions, origin, care); clear modular blocks",
+        "mood": "transparent, credible, organized — turn specs into a visual story",
+        "avoid": "plain text table screenshot, overcrowded labels, low-contrast gray text",
+    },
+    "after_sales": {
+        "composition": "trust-badge wall or guarantee card layout; symmetrical or centered reassurance design",
+        "visual_elements": "seal/badge motifs rendered as soft 3D shapes, shield icons, checkmarks, gentle ribbon or certificate texture",
+        "information_hierarchy": "one central promise (e.g., guarantee badge) surrounded by 3-4 support icons; blank areas for policy text",
+        "mood": "reassuring, official-but-friendly, risk-free purchase confidence",
+        "avoid": "legal-document aesthetic, dense paragraphs, aggressive red warning colors",
+    },
+    "brand_story": {
+        "composition": "narrative split-frame or layered scene: product + raw material + maker/environment detail; editorial magazine spread",
+        "visual_elements": "natural raw ingredients or craftsmanship details, soft landscape or workshop ambience, handwritten-style texture (no real text), warm analog grain",
+        "information_hierarchy": "visual story arc from origin to product; image should feel like a magazine photo essay",
+        "mood": "authentic, emotional, heritage or purpose-driven",
+        "avoid": "generic brand stock photo, logo-only image, disconnected collage",
+    },
+    "notice": {
+        "composition": "calm instructional layout: one central product or icon with 2-4 care symbols arranged around it",
+        "visual_elements": "soft iconography (wash, iron, dry, store), gentle color-coded circles, clean line art",
+        "information_hierarchy": "product/icon at center + care symbols in a clear ring or list; breathable spacing",
+        "mood": "gentle guidance, easy to follow, premium customer care",
+        "avoid": "dense warning labels, alarming icons, red caution signs, hard-to-read small text",
+    },
+    "qualification": {
+        "composition": "authority wall: certificates/license cards arranged in a refined gallery grid, product as anchor",
+        "visual_elements": "elegant frames or embossed seals, subtle gold foil accents, clean document-like cards with soft shadows",
+        "information_hierarchy": "product or brand mark + 2-4 qualification badges; formal but not bureaucratic",
+        "mood": "certified, trustworthy, premium quality assurance",
+        "avoid": "pixelated certificate screenshots, stacked unreadable documents, gaudy gold backgrounds",
+    },
+    "faq": {
+        "composition": "Q&A conversation layout: soft chat bubbles or accordion panels floating around a small product still life",
+        "visual_elements": "rounded speech bubbles, minimal line icons (question mark, checkmark), product placed unobtrusively",
+        "information_hierarchy": "product + 2-3 question/answer zones; friendly visual rhythm",
+        "mood": "approachable, helpful, conversational",
+        "avoid": "plain text screenshot, wall of text, no visual anchors",
+    },
+    "factory": {
+        "composition": "wide-angle or detail shot of a clean production environment; product in foreground with craft process behind",
+        "visual_elements": "modern machinery, artisan hands at work, raw materials, clean workshop lighting, shallow depth of field",
+        "information_hierarchy": "process + product + environment; show capability without clutter",
+        "mood": "professional, capable, behind-the-scenes authenticity",
+        "avoid": "messy factory floor, unrelated machinery, dark gritty look, stock photos of strangers",
+    },
+    "package": {
+        "composition": "flat-lay unboxing scene or gift-style arrangement: box, wrapping, product, and a small accessory",
+        "visual_elements": "premium packaging with subtle branding area, tissue paper, ribbon or seal, soft surface texture",
+        "information_hierarchy": "package as hero + product partially revealed; all elements aligned to a refined grid",
+        "mood": "gift-worthy, premium unboxing experience, attention to presentation",
+        "avoid": "crushed boxes, messy background, excessive plastic, random props",
+    },
+    "logistics": {
+        "composition": "journey visualization: stylized map route, package in motion, timeline or checkpoint layout",
+        "visual_elements": "soft map abstraction, truck/plane/warehouse icons rendered as clean shapes, delivery package with product branding",
+        "information_hierarchy": "package + route/timeline + 2-3 milestone icons; blank zones for speed claims",
+        "mood": "fast, reliable, transparent, global-but-friendly",
+        "avoid": "realistic map screenshots, crowded shipping labels, confusing arrows",
+    },
+    "pain_point": {
+        "composition": "before/after or problem-to-solution split frame; emotional hook on one side, relief on the other",
+        "visual_elements": "soft visual metaphor (wrinkled vs smooth, dark vs bright), one small product as the solution, subtle color temperature shift",
+        "information_hierarchy": "pain scenario → product → relief outcome; story in one frame",
+        "mood": "empathetic, transformational, relatable without being negative",
+        "avoid": "gross or distressing imagery, aggressive red X marks, cluttered before/after collage",
+    },
+    "lifestyle": {
+        "composition": "aspirational scene with product naturally in use: morning routine, travel moment, social gathering, or cozy corner",
+        "visual_elements": "warm natural light, authentic environment, human interaction implied, complementary props that reinforce the mood",
+        "information_hierarchy": "scene mood first, product as the enabler; blank headline area for lifestyle copy",
+        "mood": "content, aspirational, 'this could be my life' — emotional sell",
+        "avoid": "studio product-only shot, stiff model pose, unrelated luxury backdrop",
+    },
+    "comparison": {
+        "composition": "clean comparison table or split-screen: our product on the left, generic alternative on the right, advantage markers on our side",
+        "visual_elements": "two columns with subtle divider, checkmark vs minimal dot, product hero shots at top of each column, soft brand accent color highlighting the winner",
+        "information_hierarchy": "product vs competitor + 3-5 comparison rows + clear visual winner cue",
+        "mood": "confident, factual, premium-but-fair",
+        "avoid": "crowded spreadsheet screenshot, mocking competitor design, unreadable small rows",
+    },
+    "cta": {
+        "composition": "bold final-frame layout: product hero + large clear button area + urgency element (subtle badge or countdown shape)",
+        "visual_elements": "soft gradient background, product floating or placed with confidence, rounded button-shaped block, trust micro-badges",
+        "information_hierarchy": "product + value statement zone + prominent CTA block + 1-2 trust signals",
+        "mood": "decisive, exciting-but-premium, final nudge to purchase",
+        "avoid": "garish sale graphics, flashing colors, too many badges, cheap discount aesthetic",
+    },
+}
+
 # 视觉风格
 VISUAL_STYLES = [
     {"key": "minimal", "name_zh": "极简留白"},
@@ -273,6 +412,22 @@ def build_style_lock(visual_style: str, industry: str = "") -> str:
     return block.strip()
 
 
+def build_design_guide_block(module_key: str) -> str:
+    """返回模块级设计指导文本（用于追加到已有 prompt 末尾，确保模板 prompt 也带设计感约束）。"""
+    guide = MODULE_DESIGN_GUIDE.get(module_key)
+    if not guide:
+        return ""
+    return (
+        "\n[DESIGN ENFORCEMENT — this panel must look like a designed e-commerce detail-page section]\n"
+        f"Composition: {guide['composition']}.\n"
+        f"Visual elements: {guide['visual_elements']}.\n"
+        f"Information hierarchy: {guide['information_hierarchy']}.\n"
+        f"Mood: {guide['mood']}.\n"
+        f"Avoid: {guide['avoid']}.\n"
+        "Leave clean areas for later text overlay, but do NOT render any readable text, letters, watermarks, or logos."
+    )
+
+
 def build_module_prompt(
     module_key: str,
     product_name: str,
@@ -303,10 +458,13 @@ def build_module_prompt(
 
     industry_style = INDUSTRY_STYLE_HINT.get(industry, "")
 
+    # 模块设计感指导
+    guide = MODULE_DESIGN_GUIDE.get(module_key) or MODULE_DESIGN_GUIDE.get("hero")
+
     base = (
         f"Product: {product_name}. "
         f"Module: {module['name_zh']} - {module['desc_zh']}. "
-        f"Goal: e-commerce detail page image for {language} market, "
+        f"Goal: design-driven e-commerce detail page panel for {language} market, "
         f"high quality, professional product photography{style_text}. "
     )
     if industry_style:
@@ -317,7 +475,20 @@ def build_module_prompt(
         base += f"Key selling points to feature in the image: {product_selling_points}. "
     if extra:
         base += f"Additional: {extra}. "
-    base += "Sharp focus, well-lit, no text overlay, no watermark, 8K, high detail."
+
+    # 注入设计感版式与叙事约束（解决“只是模特穿着图”的问题）
+    design_block = (
+        "\n[DESIGN DIRECTION — this is a designed e-commerce panel, not a plain product photo]\n"
+        f"Composition: {guide['composition']}.\n"
+        f"Visual elements: {guide['visual_elements']}.\n"
+        f"Information hierarchy: {guide['information_hierarchy']}.\n"
+        f"Mood: {guide['mood']}.\n"
+        f"Avoid: {guide['avoid']}.\n"
+        "Leave blank areas or subtle placeholder blocks for later text overlay, but do NOT render any readable text, letters, watermarks, or logos."
+    )
+    base = (base.rstrip(". \n") + "." + design_block)
+
+    base += "\nTechnical: sharp focus, well-lit, 8K, high detail, photorealistic."
     if style_lock:
         base = (base.rstrip(". \n") + ". " + style_lock).strip()
     return base
