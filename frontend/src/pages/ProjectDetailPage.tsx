@@ -12,6 +12,21 @@ export default function ProjectDetailPage() {
   const [showCombined, setShowCombined] = useState(false)
   const pollRef = useRef<number | null>(null)
 
+  // 产品需求·可编辑（生成后也能完善）
+  const [req, setReq] = useState({ selling: '', desc: '', extra: '' })
+  const [reqBusy, setReqBusy] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const reqFileRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (project) {
+      setReq({
+        selling: project.product_selling_points || '',
+        desc: project.product_description || '',
+        extra: project.extra_requirements || '',
+      })
+    }
+  }, [project?.id])
+
   async function load() {
     if (!id) return
     const [p, a, t] = await Promise.all([
@@ -66,6 +81,55 @@ export default function ProjectDetailPage() {
     if (!id) return
     await api.upload(id, [file], 'style_reference')
     await load()
+  }
+
+  async function saveRequirements(regenerate: boolean) {
+    if (!id) return
+    setReqBusy(true)
+    try {
+      await api.updateProject(id, {
+        product_selling_points: req.selling,
+        product_description: req.desc,
+        extra_requirements: req.extra,
+      })
+      await load()
+      if (regenerate) await handleGenerate()
+    } catch (e: any) {
+      alert('保存失败：' + e.message)
+    } finally {
+      setReqBusy(false)
+    }
+  }
+
+  async function handleAnalyzeReq(file: File) {
+    if (!id || !project) return
+    setAnalyzing(true)
+    try {
+      const r: any = await api.analyzeImage(
+        {
+          productName: project.product_name,
+          industry: project.industry,
+          language: project.language,
+          visualStyle: project.visual_style,
+        },
+        file,
+      )
+      if (r._error) {
+        alert('视觉分析暂不可用：' + r._error + '\n你可以手动编辑卖点。')
+        return
+      }
+      setReq((prev) => ({
+        selling: r.selling_points || prev.selling,
+        desc: r.description || prev.desc,
+        extra:
+          (prev.extra ? prev.extra + '\n' : '') +
+          (r.suggested_extra ? `[AI 图析] ${r.suggested_extra}` : ''),
+      }))
+    } catch (e: any) {
+      alert('图片分析失败：' + e.message)
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   if (!project) return <div className="p-8 text-slate-400">加载中…</div>
@@ -188,6 +252,82 @@ export default function ProjectDetailPage() {
               }}
             />
           </label>
+        </div>
+      </section>
+
+      {/* 产品需求 · 可编辑（生成后也能完善，上传图自动提炼卖点） */}
+      <section className="card p-4 mb-6 border-slate-200">
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-sm font-medium text-slate-700">产品需求 · 可编辑</div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="text-sm text-brand-600 hover:underline flex items-center gap-1"
+              onClick={() => reqFileRef.current?.click()}
+              disabled={analyzing}
+            >
+              {analyzing ? '分析中…' : '📷 上传图自动提炼卖点'}
+            </button>
+            <input
+              ref={reqFileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) handleAnalyzeReq(f)
+                e.target.value = ''
+              }}
+            />
+          </div>
+        </div>
+        <div className="text-xs text-slate-400 mb-3">
+          上传一张产品图，AI 自动提炼卖点/特点并填入下方；你可随手修改。保存后重新生成，整页调性由「风格锁定 + 风格参考图」保持一致。
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">核心卖点</label>
+            <textarea
+              className="textarea h-20"
+              value={req.selling}
+              onChange={(e) => setReq((p) => ({ ...p, selling: e.target.value }))}
+              placeholder="AI 提炼或手动填写：集吸尘/拖地/自清洁一体；高转速滚刷"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">产品描述</label>
+            <textarea
+              className="textarea h-20"
+              value={req.desc}
+              onChange={(e) => setReq((p) => ({ ...p, desc: e.target.value }))}
+              placeholder="AI 提炼或手动填写产品描述"
+            />
+          </div>
+        </div>
+        <div className="mt-3">
+          <label className="block text-xs text-slate-500 mb-1">其他要求 / 拍摄重点</label>
+          <textarea
+            className="textarea h-16"
+            value={req.extra}
+            onChange={(e) => setReq((p) => ({ ...p, extra: e.target.value }))}
+            placeholder="如：现代简洁风格；颜色偏好；差异化表达"
+          />
+        </div>
+        <div className="flex gap-2 mt-3">
+          <button
+            className="btn-primary"
+            disabled={reqBusy}
+            onClick={() => saveRequirements(false)}
+          >
+            {reqBusy ? '保存中…' : '💾 保存修改'}
+          </button>
+          <button
+            className="btn-secondary"
+            disabled={reqBusy || reqBusy}
+            onClick={() => saveRequirements(true)}
+          >
+            保存并重新生成
+          </button>
         </div>
       </section>
 

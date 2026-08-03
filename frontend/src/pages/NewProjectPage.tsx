@@ -414,13 +414,71 @@ function StepRequirement({
   patch: (p: Partial<WizardState>) => void
   onAIHelp: () => void
 }) {
+  const [busy, setBusy] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleAnalyze(file: File) {
+    setBusy(true)
+    try {
+      const r: any = await api.analyzeImage(
+        {
+          productName: state.product_name,
+          industry: state.industry,
+          language: state.language,
+          visualStyle: state.visual_style,
+        },
+        file,
+      )
+      if (r._error) {
+        alert('视觉分析暂不可用：' + r._error + '\n你可以手动填写卖点。')
+        return
+      }
+      patch({
+        product_selling_points: r.selling_points || state.product_selling_points,
+        product_description: r.description || state.product_description,
+        extra_requirements:
+          (state.extra_requirements ? state.extra_requirements + '\n' : '') +
+          (r.suggested_extra ? `[AI 图析] ${r.suggested_extra}` : ''),
+      })
+    } catch (e: any) {
+      alert('图片分析失败：' + e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-slate-700">详情图要求</label>
-        <button className="text-sm text-brand-600 hover:underline flex items-center gap-1" onClick={onAIHelp}>
-          ✨ AI 帮写
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="text-sm text-brand-600 hover:underline flex items-center gap-1"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+          >
+            {busy ? '分析中…' : '📷 上传图自动提炼'}
+          </button>
+          <button
+            type="button"
+            className="text-sm text-brand-600 hover:underline flex items-center gap-1"
+            onClick={onAIHelp}
+          >
+            ✨ AI 帮写
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) handleAnalyze(f)
+              e.target.value = ''
+            }}
+          />
+        </div>
       </div>
       <div>
         <label className="block text-xs text-slate-500 mb-1">核心卖点</label>

@@ -276,6 +276,103 @@ async def ai_help_requirements(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+# ---------- 视觉分析：上传产品图 → 提炼卖点/特点 ----------
+
+VISION_SYSTEM = """你是一名资深的电商产品分析师，擅长从产品图片中提炼商业卖点与差异化特点。
+你会看到一张产品图（可能包含外观、包装、材质细节或使用场景）。请客观、具体地分析，
+输出严格 JSON，不要包含任何解释性文字。"""
+
+VISION_USER_TEMPLATE = """请分析这张产品图，为「{product_name}」（行业：{industry}，目标市场语言：{language}，视觉风格：{visual_style}）提炼电商详情页可用的信息。
+
+请输出 JSON：
+{{
+  "selling_points": "3-5 条核心卖点，每条用『·』分隔，口语化、有购买驱动力",
+  "features": "可观察到的产品特点/材质/功能/规格，用『、』分隔",
+  "description": "一段面向消费者的产品描述（2-4 句，自然融入上述视觉风格）",
+  "suggested_extra": "可补充进需求的细节建议（如拍摄重点、差异化表达），1-2 句"
+}}
+
+只输出 JSON。"""
+
+ANALYZE_FALLBACK = {
+    "selling_points": "",
+    "features": "",
+    "description": "",
+    "suggested_extra": "",
+}
+
+
+async def analyze_product_image(
+    *,
+    image_b64: str,
+    product_name: str = "",
+    industry: str = "",
+    language: str = "zh-CN",
+    visual_style: str = "",
+) -> Dict[str, Any]:
+    """用视觉 LLM 从产品图提炼卖点/特点/描述。
+
+    返回 {selling_points, features, description, suggested_extra}。
+    无可用文本 LLM 时返回空字段（调用方应提示用户手动填写）。
+    """
+    if not settings.has_text_llm:
+        return dict(ANALYZE_FALLBACK)
+
+    style_name = ""
+    for v in VISUAL_STYLES:
+        if v["key"] == (visual_style or ""):
+            style_name = v["name_zh"]
+            break
+
+    user_prompt = VISION_USER_TEMPLATE.format(
+        product_name=product_name or "该产品",
+        industry=industry or "通用",
+        language=language or "zh-CN",
+        visual_style=style_name or visual_style or "专业电商",
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=90) as client:
+            r = await client.post(
+                f"{settings.text_base_url.rstrip('/')}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.text_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": settings.text_model,
+                    "messages": [
+                        {"role": "system", "content": VISION_SYSTEM},
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": user_prompt},
+                                {"type": "image_url", "image_url": {"url": image_b64}},
+                            ],
+                        },
+                    ],
+                    "temperature": 0.4,
+                    "response_format": {"type": "json_object"},
+                },
+            )
+            r.raise_for_status()
+            data = r.json()
+            raw = data["choices"][0]["message"]["content"]
+    except Exception as e:
+        # 视觉分析失败不应阻断主流程，返回空 + 错误信息由调用方提示
+        return {**ANALYZE_FALLBACK, "_error": f"视觉分析失败：{e}"}
+
+    parsed = _try_parse_json(raw)
+    if not parsed:
+        return {**ANALYZE_FALLBACK, "_error": "视觉分析返回无法解析"}
+    return {
+        "selling_points": (parsed.get("selling_points") or "").strip(),
+        "features": (parsed.get("features") or "").strip(),
+        "description": (parsed.get("description") or "").strip(),
+        "suggested_extra": (parsed.get("suggested_extra") or "").strip(),
+    }
+
+
 def get_prompt_template(industry: str, module_key: str) -> Optional[str]:
     """从知识库获取指定行业+模块的 Prompt 模板。
 

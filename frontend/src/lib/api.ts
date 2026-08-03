@@ -150,6 +150,21 @@ export const api = {
       '/api/ai/help',
       { method: 'POST', body: JSON.stringify(data) }
     ),
+  // 上传产品图 → 视觉 LLM 提炼卖点/特点/描述（project-agnostic，上下文作为表单字段）
+  analyzeImage: async (
+    ctx: { productName?: string; industry?: string; language?: string; visualStyle?: string },
+    file: File,
+  ) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    if (ctx.productName) fd.append('product_name', ctx.productName)
+    if (ctx.industry) fd.append('industry', ctx.industry)
+    if (ctx.language) fd.append('language', ctx.language)
+    if (ctx.visualStyle) fd.append('visual_style', ctx.visualStyle)
+    const r = await fetch(`/api/projects/analyze-image`, { method: 'POST', body: fd })
+    if (!r.ok) throw new Error(await r.text())
+    return r.json()
+  },
 
   // Generation
   runGeneration: (projectId: string, data: any) =>

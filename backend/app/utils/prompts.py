@@ -281,6 +281,7 @@ def build_module_prompt(
     visual_style: str,
     extra: str = "",
     product_description: str = "",
+    product_selling_points: str = "",
     style_lock: str = "",
 ) -> str:
     """根据模块和上下文拼装一个生图 prompt。
@@ -288,6 +289,7 @@ def build_module_prompt(
     此处为通用模板，未来可被 AI 改写。
     style_lock 为「视觉调性锁定」段落（来自 build_style_lock），由调用方统一注入，
     保证同一项目所有模块共用同一套调性规范。
+    product_selling_points 来自产品分析/用户提炼，确保卖点融入每张图。
     """
     module = next((m for m in COMMON_MODULES if m["key"] == module_key), None)
     if not module:
@@ -311,6 +313,8 @@ def build_module_prompt(
         base += f"Industry visual hint: {industry_style}. "
     if product_description:
         base += f"Product description: {product_description}. "
+    if product_selling_points:
+        base += f"Key selling points to feature in the image: {product_selling_points}. "
     if extra:
         base += f"Additional: {extra}. "
     base += "Sharp focus, well-lit, no text overlay, no watermark, 8K, high detail."

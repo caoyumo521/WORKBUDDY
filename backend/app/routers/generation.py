@@ -199,6 +199,7 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
                 visual_style=project.visual_style,
                 extra=extra,
                 product_description=project.product_description or "",
+                product_selling_points=project.product_selling_points or "",
             )
     else:
         prompt = build_module_prompt(
@@ -209,6 +210,7 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
             visual_style=project.visual_style,
             extra=extra,
             product_description=project.product_description or "",
+            product_selling_points=project.product_selling_points or "",
         )
     # 注入「视觉调性锁定」：所有模块共用同一份，保证整页调性统一
     if style_lock:

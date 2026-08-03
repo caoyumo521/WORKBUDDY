@@ -1,13 +1,14 @@
 """/api/projects - 项目 CRUD"""
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+import base64
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate, WizardPayload
 from app.services import project_service
-from app.services.ai_service import plan_detail_page
+from app.services.ai_service import analyze_product_image, plan_detail_page
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -96,6 +97,44 @@ def delete_project(project_id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Project not found")
     project_service.delete_project(db, project)
     return {"ok": True}
+
+
+@router.post("/analyze-image")
+async def analyze_image(
+    file: UploadFile = File(...),
+    product_name: str = Form(""),
+    industry: str = Form(""),
+    language: str = Form("zh-CN"),
+    visual_style: str = Form(""),
+):
+    """上传一张产品图，用视觉 LLM 提炼卖点/特点/描述，返回结构化结果（前端可编辑后保存）。
+
+    上下文（产品名/行业/语言/风格）作为表单字段传入，使该接口既可在详情页（已有项目）
+    使用，也可在新建向导（项目尚未创建）阶段使用。
+    """
+    data = await file.read()
+    if not data:
+        raise HTTPException(400, "空文件")
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(400, "图片过大（>10MB），请压缩后再上传")
+
+    ext = (file.filename or "image.png").rsplit(".", 1)[-1].lower()
+    mime = (
+        "image/png" if ext == "png"
+        else "image/webp" if ext == "webp"
+        else "image/jpeg"
+    )
+    b64 = base64.b64encode(data).decode("ascii")
+    image_b64 = f"data:{mime};base64,{b64}"
+
+    result = await analyze_product_image(
+        image_b64=image_b64,
+        product_name=product_name,
+        industry=industry,
+        language=language,
+        visual_style=visual_style,
+    )
+    return result
 
 
 @router.get("/{project_id}/preview-sources")
