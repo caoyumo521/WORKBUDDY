@@ -27,14 +27,18 @@ echo "  安装/更新后端依赖..."
 backend/.venv/bin/pip install -q -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 杀掉残留进程
-pkill -f "uvicorn app.main" 2>/dev/null || true
-pkill -f "vite" 2>/dev/null || true
-sleep 1
+# 优先按端口精确清理，避免误杀其他项目的 uvicorn/vite
+echo "  清理后端 8091 / 前端 5173 残留进程..."
+lsof -ti:8091 | xargs kill -9 2>/dev/null || true
+lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+sleep 2
 
 # 启动后端
-echo "  启动后端服务 (端口 8088)..."
-nohup backend/.venv/bin/python backend/run.py > /tmp/dps-backend.log 2>&1 &
+echo "  启动后端服务 (端口 8091)..."
+cd backend
+nohup .venv/bin/python run.py > /tmp/dps-backend.log 2>&1 &
 echo $! > /tmp/dps-backend.pid
+cd ..
 
 # 2. 前端
 echo "[2/3] 准备前端..."
@@ -44,15 +48,17 @@ if [ ! -d "frontend/node_modules" ]; then
 fi
 
 echo "  启动前端服务 (端口 5173)..."
-nohup npx vite --root frontend --host 0.0.0.0 --port 5173 > /tmp/dps-frontend.log 2>&1 &
+cd frontend
+nohup npx vite --host 0.0.0.0 --port 5173 > /tmp/dps-frontend.log 2>&1 &
 echo $! > /tmp/dps-frontend.pid
+cd ..
 
 sleep 4
 
 echo "[3/3] 启动完成"
 echo "  - 前端: http://127.0.0.1:5173/"
-echo "  - 后端: http://127.0.0.1:8088/"
-echo "  - API 文档: http://127.0.0.1:8088/docs"
+echo "  - 后端: http://127.0.0.1:8091/"
+echo "  - API 文档: http://127.0.0.1:8091/docs"
 echo ""
 
 # 打开浏览器

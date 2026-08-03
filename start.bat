@@ -43,13 +43,36 @@ call .venv\Scripts\activate.bat
 python -m pip install -q -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple 2>nul
 cd ..
 
-REM 杀掉可能残留的 8089 进程
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8091.*LISTENING"') do (
-  taskkill /F /PID %%a >nul 2>&1
-)
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5173.*LISTENING"') do (
-  taskkill /F /PID %%a >nul 2>&1
-)
+REM ===== 清理可能残留的 8091/5173 进程与僵尸 socket =====
+echo  清理残留的后端/前端进程...
+
+REM 后端 8091
+set RETRY=0
+:retry_backend
+set /a RETRY+=1
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8091"') do taskkill /F /PID %%a >nul 2>&1
+powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient).Connect('127.0.0.1',8091);exit 0}catch{exit 1}" >nul 2>&1
+if errorlevel 1 goto backend_clean_done
+if %RETRY% geq 5 goto backend_clean_done
+echo  8091 仍有服务，第 %RETRY% 次重试清理...
+timeout /t 1 >nul
+goto retry_backend
+:backend_clean_done
+timeout /t 2 >nul
+
+REM 前端 5173
+set RETRY=0
+:retry_frontend
+set /a RETRY+=1
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5173"') do taskkill /F /PID %%a >nul 2>&1
+powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient).Connect('127.0.0.1',5173);exit 0}catch{exit 1}" >nul 2>&1
+if errorlevel 1 goto frontend_clean_done
+if %RETRY% geq 5 goto frontend_clean_done
+echo  5173 仍有服务，第 %RETRY% 次重试清理...
+timeout /t 1 >nul
+goto retry_frontend
+:frontend_clean_done
+timeout /t 2 >nul
 
 REM 启动后端
 echo  启动后端服务 (端口 8091)...
@@ -69,7 +92,7 @@ start "DPS-Frontend" /MIN cmd /c "cd /d %~dp0frontend && npx vite --host 0.0.0.0
 
 REM ===== 4. 等待并打开浏览器 =====
 echo [3/3] 等待服务就绪...
-timeout /t 5 >nul
+timeout /t 8 >nul
 
 start "" http://127.0.0.1:5173/
 
