@@ -389,3 +389,54 @@ class OpenAIProvider(ImageGenerationProvider):
             "model": self.model,
             "raw": data,
         }
+
+
+class MultiRelayProvider(ImageGenerationProvider):
+    """多中转容灾：依次尝试多个 OpenAIProvider，第一个成功即用。
+
+    - 每个中转内部已自带 5xx 重试（见 OpenAIProvider._post_with_retry）
+    - 4xx（如 401 Invalid token）不重试，立即切下一个中转
+    - 全部失败时汇总各中转错误抛出
+    """
+
+    name = "multi-relay"
+
+    def __init__(self, relays: List["OpenAIProvider"]):
+        self.relays = relays
+
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        negative_prompt: str = "",
+        width: int = 1024,
+        height: int = 1024,
+        reference_images: Optional[List[str]] = None,
+        seed: Optional[int] = None,
+        extra: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        errors: List[str] = []
+        for idx, relay in enumerate(self.relays, start=1):
+            try:
+                logger.info(
+                    "[多中转] 尝试 #%d  %s  model=%s", idx, relay.base_url, relay.model
+                )
+                result = await relay.generate(
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    width=width,
+                    height=height,
+                    reference_images=reference_images,
+                    seed=seed,
+                    extra=extra,
+                )
+                result = dict(result)
+                result["relay_index"] = idx
+                result["relay_base_url"] = relay.base_url
+                logger.info("[多中转] #%d 成功 (%s)", idx, relay.base_url)
+                return result
+            except Exception as e:  # 包括 ImageAPIError / RuntimeError / 网络异常
+                errors.append(f"#{idx}({relay.base_url}): {e}")
+                logger.warning("[多中转] #%d 失败: %s", idx, e)
+                continue
+        raise RuntimeError("所有中转均不可用: " + " | ".join(errors))

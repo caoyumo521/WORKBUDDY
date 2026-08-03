@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     # gpt-image 专用: transparent | opaque | auto
     image_background: str = "auto"
 
+    # ---- 生图多中转（容灾）----
+    # JSON 数组，每项 {base_url, api_key, model}
+    # 依次尝试，第一个成功的即用；全部失败才报错
+    # 例: [{"base_url":"https://a/v1","api_key":"sk-xxx","model":"gpt-image-2"}]
+    # 留空则回退到上面的单 Key 配置（IMAGE_API_KEY / IMAGE_BASE_URL / IMAGE_MODEL）
+    image_relays: str = ""
+
     # ---- 文案 / 规划 LLM ----
     # provider:
     #   openai    → 标准 OpenAI 兼容 API

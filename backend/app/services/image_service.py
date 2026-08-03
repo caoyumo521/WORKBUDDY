@@ -16,7 +16,11 @@
 }
 """
 from abc import ABC, abstractmethod
+import json
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ImageGenerationProvider(ABC):
@@ -58,16 +62,44 @@ def resolution_to_size(resolution: str, aspect_ratio: str = "1:1") -> tuple[int,
 
 
 def get_image_provider() -> ImageGenerationProvider:
-    """工厂方法：根据 .env 决定用哪个 provider。"""
+    """工厂方法：根据 .env 决定用哪个 provider。
+
+    优先使用多中转配置 IMAGE_RELAYS（依次尝试，哪个可用用哪个）；
+    未配置时回退到单 Key（IMAGE_PROVIDER=openai + IMAGE_API_KEY）。
+    """
     from app.config import settings
     from app.services.image_providers.custom_provider import CustomProvider
-    from app.services.image_providers.openai_provider import OpenAIProvider
+    from app.services.image_providers.openai_provider import OpenAIProvider, MultiRelayProvider
     from app.services.image_providers.flux_provider import FluxProvider
     from app.services.image_providers.mock_provider import MockProvider
 
+    # 1) 多中转（容灾）
+    relays: List[OpenAIProvider] = []
+    raw = (settings.image_relays or "").strip()
+    if raw:
+        try:
+            arr = json.loads(raw)
+            for item in arr:
+                bu = item.get("base_url") or settings.image_base_url
+                ak = item.get("api_key") or ""
+                mdl = item.get("model") or settings.image_model
+                if ak:
+                    relays.append(OpenAIProvider(bu, ak, mdl))
+        except Exception as e:
+            logger.warning("解析 IMAGE_RELAYS 失败，回退单 Key: %s", e)
+
+    # 2) 单 Key 兜底（未配置 IMAGE_RELAYS 时）
+    if not relays and settings.image_provider.lower() == "openai" and settings.image_api_key:
+        relays.append(OpenAIProvider(settings.image_base_url, settings.image_api_key, settings.image_model))
+
+    if relays:
+        if len(relays) == 1:
+            return relays[0]
+        logger.info("生图多中转已启用，共 %d 个中转", len(relays))
+        return MultiRelayProvider(relays)
+
+    # 3) 其他 provider（flux / custom / mock）
     provider = settings.image_provider.lower()
-    if provider == "openai":
-        return OpenAIProvider(settings.image_base_url, settings.image_api_key, settings.image_model)
     if provider == "flux":
         return FluxProvider(settings.image_base_url, settings.image_api_key, settings.image_model)
     if provider == "mock":
