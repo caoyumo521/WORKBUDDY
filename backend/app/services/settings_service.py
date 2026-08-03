@@ -12,6 +12,7 @@
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
@@ -204,10 +205,26 @@ async def test_connection(section: str) -> Dict:
     import httpx
 
     if section == "image":
-        base = settings.image_base_url
-        key = settings.image_api_key
-        model = settings.image_model or "gpt-image-2"
-        url = base.rstrip("/") + "/models"
+        # 优先使用多中转配置（IMAGE_RELAYS），依次探测 GET /models，避免单 Key 失效误报
+        relays: List[Dict] = []
+        raw = (settings.image_relays or "").strip()
+        if raw:
+            try:
+                for idx, item in enumerate(json.loads(raw), start=1):
+                    bu = item.get("base_url") or settings.image_base_url
+                    ak = item.get("api_key") or ""
+                    mdl = item.get("model") or settings.image_model or "gpt-image-2"
+                    if ak:
+                        relays.append({"idx": idx, "base": bu, "key": ak, "model": mdl})
+            except Exception:
+                pass
+        if not relays:
+            relays.append({
+                "idx": 0,
+                "base": settings.image_base_url,
+                "key": settings.image_api_key,
+                "model": settings.image_model or "gpt-image-2",
+            })
     elif section == "text":
         base = settings.text_base_url
         key = settings.text_api_key
@@ -220,52 +237,67 @@ async def test_connection(section: str) -> Dict:
     else:
         return {"ok": False, "message": f"unknown section: {section}"}
 
+    if section == "image":
+        if not relays:
+            return {"ok": False, "message": "API Key 未配置"}
+
+        last_err = ""
+        async with httpx.AsyncClient(timeout=20) as client:
+            for rel in relays:
+                idx = rel["idx"]
+                base = rel["base"]
+                key = rel["key"]
+                model = rel["model"]
+                if not key:
+                    continue
+                t0 = time.time()
+                try:
+                    r = await client.get(
+                        base.rstrip("/") + "/models",
+                        headers={"Authorization": f"Bearer {key}"},
+                    )
+                    latency = int((time.time() - t0) * 1000)
+                    if r.status_code in (200, 201):
+                        # 检查 model 是否在可用列表中
+                        try:
+                            data = r.json()
+                            available = [m.get("id", "") for m in data.get("data", [])]
+                            if available and model not in available:
+                                last_err = f"中转 #{idx} 连通，但模型 '{model}' 不在可用列表"
+                                continue
+                        except Exception:
+                            pass
+                        label = f"中转 #{idx}" if idx else "单 Key"
+                        return {
+                            "ok": True,
+                            "message": f"{label} 连通成功，模型 {model} 可用 ({base.rstrip('/')})",
+                            "latency_ms": latency,
+                        }
+                    last_err = f"中转 #{idx} HTTP {r.status_code}: {r.text[:120]}"
+                except Exception as e:
+                    last_err = f"中转 #{idx} 连接失败：{e}"
+        return {"ok": False, "message": f"全部中转探测失败，最后错误：{last_err}"}
+
+    # ---- text ----
     if not key:
         return {"ok": False, "message": "API Key 未配置"}
 
     t0 = time.time()
     try:
         async with httpx.AsyncClient(timeout=20) as client:
-            if section == "image":
-                # 用 GET /models 测试连通性 + 检查模型可用性
-                r = await client.get(
-                    url,
-                    headers={"Authorization": f"Bearer {key}"},
-                )
-                latency = int((time.time() - t0) * 1000)
-                if r.status_code in (200, 201):
-                    # 检查 model 是否在可用列表中
-                    try:
-                        data = r.json()
-                        available = [m.get("id", "") for m in data.get("data", [])]
-                        if available and model not in available:
-                            return {
-                                "ok": False,
-                                "message": f"连通成功，但模型 '{model}' 不在可用列表中。可用模型：{', '.join(available[:10])}",
-                                "latency_ms": latency,
-                            }
-                    except Exception:
-                        pass  # 无法解析模型列表，只报连通成功
-                    return {"ok": True, "message": f"连通成功，模型 {model} 可用", "latency_ms": latency}
-                return {
-                    "ok": False,
-                    "message": f"HTTP {r.status_code}: {r.text[:200]}",
-                    "latency_ms": latency,
-                }
-            else:
-                r = await client.post(
-                    url,
-                    json=body,
-                    headers={"Authorization": f"Bearer {key}"},
-                )
-                latency = int((time.time() - t0) * 1000)
-                if r.status_code in (200, 201):
-                    return {"ok": True, "message": f"连通成功", "latency_ms": latency}
-                return {
-                    "ok": False,
-                    "message": f"HTTP {r.status_code}: {r.text[:200]}",
-                    "latency_ms": latency,
-                }
+            r = await client.post(
+                url,
+                json=body,
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            latency = int((time.time() - t0) * 1000)
+            if r.status_code in (200, 201):
+                return {"ok": True, "message": f"连通成功", "latency_ms": latency}
+            return {
+                "ok": False,
+                "message": f"HTTP {r.status_code}: {r.text[:200]}",
+                "latency_ms": latency,
+            }
     except Exception as e:
         return {"ok": False, "message": f"连接失败：{e}"}
 
