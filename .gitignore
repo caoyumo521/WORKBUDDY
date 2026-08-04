@@ -18,10 +18,8 @@ dist/
 .vscode/
 *.swp
 
-# 项目数据
-projects/*/生成图片/
-projects/*/09_导出/
-projects/*/project.json
+# 项目数据（用户工作目录：上传图/生成图/导出，绝不入库）
+projects/
 detail_studio.db
 
 # 日志
@@ -41,6 +39,9 @@ frontend/.env
 
 # 测试产物
 backend/tests/out*
+
+# 本地版本备份快照（zip 不入库，仅本地留档）
+backups/
 
 # 编辑器/OS
 Thumbs.db
