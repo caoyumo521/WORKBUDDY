@@ -215,7 +215,13 @@ async def test_connection(section: str) -> Dict:
                     ak = item.get("api_key") or ""
                     mdl = item.get("model") or settings.image_model or "gpt-image-2"
                     if ak:
-                        relays.append({"idx": idx, "base": bu, "key": ak, "model": mdl})
+                        relays.append({
+                            "idx": idx,
+                            "base": bu,
+                            "key": ak,
+                            "model": mdl,
+                            "provider": (item.get("provider") or "openai").lower(),
+                        })
             except Exception:
                 pass
         if not relays:
@@ -242,40 +248,101 @@ async def test_connection(section: str) -> Dict:
             return {"ok": False, "message": "API Key 未配置"}
 
         last_err = ""
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with httpx.AsyncClient(timeout=150) as client:
             for rel in relays:
                 idx = rel["idx"]
                 base = rel["base"]
                 key = rel["key"]
                 model = rel["model"]
+                provider = rel.get("provider", "openai")
                 if not key:
                     continue
+                label = f"中转 #{idx}" if idx else "单 Key"
                 t0 = time.time()
+
+                # GRsai 中转：无 /models 端点，也不走 /images/generations，
+                # 直接跑一次最小真实生图验证（draw/completions 流式接口）
+                if provider == "grsai":
+                    try:
+                        from app.services.image_providers.grsai_provider import GrsaiProvider
+                        prov = GrsaiProvider(base, key, model)
+                        res = await prov.generate(
+                            prompt="a simple red dot on white background, minimal",
+                            width=1024,
+                            height=1024,
+                            extra={"resolution": "1K"},
+                        )
+                        latency = int((time.time() - t0) * 1000)
+                        if res.get("url") or res.get("b64"):
+                            return {
+                                "ok": True,
+                                "message": f"{label} 连通成功（GRsai 真实生图验证），模型 {model} 可用 ({base.rstrip('/')}，{latency}ms)",
+                                "latency_ms": latency,
+                            }
+                        last_err = f"{label} GRsai 生图成功但无图片数据"
+                    except Exception as e:
+                        last_err = f"{label} GRsai 生图探测失败：{e}"
+                    continue
+
+                # 1) 先尝试 GET /models（不消耗 credits，最快）
                 try:
                     r = await client.get(
                         base.rstrip("/") + "/models",
                         headers={"Authorization": f"Bearer {key}"},
+                        timeout=20,
                     )
-                    latency = int((time.time() - t0) * 1000)
                     if r.status_code in (200, 201):
                         # 检查 model 是否在可用列表中
                         try:
                             data = r.json()
                             available = [m.get("id", "") for m in data.get("data", [])]
                             if available and model not in available:
-                                last_err = f"中转 #{idx} 连通，但模型 '{model}' 不在可用列表"
+                                last_err = f"{label} 连通，但模型 '{model}' 不在可用列表"
                                 continue
                         except Exception:
                             pass
-                        label = f"中转 #{idx}" if idx else "单 Key"
+                        latency = int((time.time() - t0) * 1000)
                         return {
                             "ok": True,
                             "message": f"{label} 连通成功，模型 {model} 可用 ({base.rstrip('/')})",
                             "latency_ms": latency,
                         }
-                    last_err = f"中转 #{idx} HTTP {r.status_code}: {r.text[:120]}"
+                    # /models 不可用（如 404），继续走真实生图探测
+                except Exception:
+                    pass  # 落到下面的真实生图测试
+
+                # 2) /models 不通时，用一次最小生图验证（真实能力证明；
+                #    api.grsai.ai 等无 /models 端点的中转适用）
+                try:
+                    gen_body = {
+                        "model": model,
+                        "prompt": "a simple red dot on white background, minimal",
+                        "n": 1,
+                        "size": "1024x1024",
+                        "quality": "low",
+                        "output_format": "png",
+                    }
+                    r2 = await client.post(
+                        base.rstrip("/") + "/images/generations",
+                        json=gen_body,
+                        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                        timeout=120,
+                    )
+                    latency = int((time.time() - t0) * 1000)
+                    if r2.status_code in (200, 201):
+                        data2 = r2.json()
+                        items = data2.get("data") or []
+                        if items and (items[0].get("b64_json") or items[0].get("url")):
+                            return {
+                                "ok": True,
+                                "message": f"{label} 连通成功（真实生图验证），模型 {model} 可用 ({base.rstrip('/')}，{latency}ms)",
+                                "latency_ms": latency,
+                            }
+                        last_err = f"{label} 返回 200 但无图片数据"
+                    else:
+                        last_err = f"{label} 生图探测 HTTP {r2.status_code}: {r2.text[:120]}"
                 except Exception as e:
-                    last_err = f"中转 #{idx} 连接失败：{e}"
+                    last_err = f"{label} 生图探测失败：{e}"
         return {"ok": False, "message": f"全部中转探测失败，最后错误：{last_err}"}
 
     # ---- text ----

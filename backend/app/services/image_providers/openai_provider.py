@@ -420,7 +420,7 @@ class MultiRelayProvider(ImageGenerationProvider):
 
     name = "multi-relay"
 
-    def __init__(self, relays: List["OpenAIProvider"]):
+    def __init__(self, relays: List[ImageGenerationProvider]):
         self.relays = relays
 
     async def generate(

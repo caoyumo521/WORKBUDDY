@@ -72,19 +72,33 @@ def get_image_provider() -> ImageGenerationProvider:
     from app.services.image_providers.openai_provider import OpenAIProvider, MultiRelayProvider
     from app.services.image_providers.flux_provider import FluxProvider
     from app.services.image_providers.mock_provider import MockProvider
+    from app.services.image_providers.grsai_provider import GrsaiProvider
+
+    def _build_relay(item: Dict[str, Any]) -> Optional[ImageGenerationProvider]:
+        """根据单个中转配置构造对应 provider 实例。"""
+        bu = item.get("base_url") or settings.image_base_url
+        ak = item.get("api_key") or ""
+        mdl = item.get("model") or settings.image_model
+        if not ak:
+            return None
+        kind = (item.get("provider") or "openai").lower()
+        if kind == "grsai":
+            return GrsaiProvider(bu, ak, mdl)
+        if kind == "custom":
+            return CustomProvider(bu, ak, mdl)
+        # 默认 openai 兼容（/images/generations、/images/edits）
+        return OpenAIProvider(bu, ak, mdl)
 
     # 1) 多中转（容灾）
-    relays: List[OpenAIProvider] = []
+    relays: List[ImageGenerationProvider] = []
     raw = (settings.image_relays or "").strip()
     if raw:
         try:
             arr = json.loads(raw)
             for item in arr:
-                bu = item.get("base_url") or settings.image_base_url
-                ak = item.get("api_key") or ""
-                mdl = item.get("model") or settings.image_model
-                if ak:
-                    relays.append(OpenAIProvider(bu, ak, mdl))
+                inst = _build_relay(item)
+                if inst:
+                    relays.append(inst)
         except Exception as e:
             logger.warning("解析 IMAGE_RELAYS 失败，回退单 Key: %s", e)
 
