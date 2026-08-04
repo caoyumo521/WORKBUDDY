@@ -221,12 +221,12 @@ class OpenAIProvider(ImageGenerationProvider):
         files = []
         for i, img in enumerate(reference_images[:4]):  # 最多 4 张参考图
             img_bytes = self._resolve_image_bytes(img)
-            files.append(("image[]", (f"ref_{i}.png", img_bytes, "image/png")))
+            ext, mime = self._detect_image_format(img_bytes)
+            files.append(("image[]", (f"ref_{i}.{ext}", img_bytes, mime)))
 
         data = {
             "model": self.model,
             "prompt": prompt,
-            "n": "1",
             "size": size,
             "quality": quality,
             "output_format": output_format,
@@ -268,6 +268,25 @@ class OpenAIProvider(ImageGenerationProvider):
                 return f.read()
         # 纯 base64
         return base64.b64decode(img)
+
+    @staticmethod
+    def _detect_image_format(data: bytes) -> tuple:
+        """根据文件头 magic bytes 推断真实图片格式，返回 (ext, mime)。
+
+        分销商（如 jbbtoken）会按真实文件头校验 multipart 的 MIME 声明，
+        若声明 image/png 但实为 jpeg 会报 INVALID_PARAM。故必须按真实字节判断，
+        不能依赖扩展名或调用方声明的 mime。
+        """
+        if data[:8] == b"\x89PNG\r\n\x1a\n":
+            return "png", "image/png"
+        if data[:3] == b"\xff\xd8\xff":
+            return "jpg", "image/jpeg"
+        if data[:4] == b"GIF8":
+            return "gif", "image/gif"
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            return "webp", "image/webp"
+        # 兜底：视为 png（保持历史行为）
+        return "png", "image/png"
 
     # ==================== 统一 POST + 重试 ====================
 
