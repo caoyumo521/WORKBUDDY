@@ -89,24 +89,37 @@ def _write_meta(workdir: str, data: dict) -> None:
 
 
 def _scan_assets(workdir: str) -> Tuple[list[Path], float]:
-    """扫描 06_生成图片/ 下的所有图片文件，返回 (paths, max_mtime)。
+    """扫描 06_生成图片/ 下的图片文件，返回 (paths, max_mtime)。
 
-    不依赖数据库，纯文件系统扫描，更快且无锁。
+    每个模块目录下若存在 composed/ 子目录，则优先使用其中的成品图；
+    否则回退到该模块的原始生成图。保证组合预览看到的是带文案的最终效果。
     """
     root = Path(workdir) / "06_生成图片"
     if not root.exists():
         return [], 0.0
+
     paths: list[Path] = []
     max_mtime = 0.0
-    for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-        for p in root.rglob(ext):
-            try:
-                mt = p.stat().st_mtime
-            except OSError:
-                continue
-            if mt > max_mtime:
-                max_mtime = mt
-            paths.append(p)
+
+    def collect_from(dir_path: Path) -> None:
+        nonlocal max_mtime
+        for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+            for p in dir_path.glob(ext):
+                try:
+                    mt = p.stat().st_mtime
+                except OSError:
+                    continue
+                if mt > max_mtime:
+                    max_mtime = mt
+                paths.append(p)
+
+    for module_dir in sorted(d for d in root.iterdir() if d.is_dir()):
+        composed_dir = module_dir / "composed"
+        if composed_dir.exists() and any(composed_dir.iterdir()):
+            collect_from(composed_dir)
+        else:
+            collect_from(module_dir)
+
     return sorted(paths), max_mtime
 
 

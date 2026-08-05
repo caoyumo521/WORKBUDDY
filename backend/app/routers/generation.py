@@ -1,11 +1,14 @@
 """/api/generation - 详情页生成、查询、重试"""
 import asyncio
 import base64
+import logging
 import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -17,7 +20,10 @@ from app.models.asset import Asset
 from app.models.generation import GenerationTask
 from app.models.project import Project
 from app.schemas.project import GenerateRequest
+from app.services.copywriter import generate_module_copy
 from app.services.image_service import get_image_provider, resolution_to_size
+from app.services.text_overlay import has_renderable_copy, render_overlay
+from app.services.text_qc import inspect_ai_text
 from app.utils.file_manager import (
     DIR_PROMPTS,
     module_dir,
@@ -140,6 +146,16 @@ def _run_all_tasks(project_id: str, task_ids: List[int], language: str, resoluti
         # 视觉调性锁定：同一项目所有模块共用【同一份】，保证整页调性统一
         style_lock = build_style_lock(project.visual_style or "", project.industry or "")
 
+        # 若未生成模块文案，先统一生成（并集方案需要每个模块的 title/subtitle/bullets）
+        if settings.text_overlay_enabled and not project.module_copy:
+            try:
+                copy = asyncio.run(generate_module_copy(project))
+                if copy:
+                    project.module_copy = copy
+                    db.commit()
+            except Exception as e:
+                logger.warning("生成模块文案失败，将使用模板回退: %s", e)
+
         for tid in task_ids:
             task = db.query(GenerationTask).filter(GenerationTask.id == tid).first()
             if not task:
@@ -170,6 +186,10 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
     )
     extra = project.extra_requirements or ""
 
+    # 该模块的结构化文案（并集方案：A 层 AI 画标题 + B 层 PIL 叠信息）
+    all_copy = project.module_copy or {}
+    module_copy = all_copy.get(task.module_key, {}) if isinstance(all_copy, dict) else {}
+
     # 优先使用知识库 Prompt 模板，回退到通用模板
     from app.services.ai_service import get_prompt_template
     template = get_prompt_template(project.industry, task.module_key)
@@ -190,14 +210,14 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
                 unit="cm" if language.startswith("zh") else "inches",
                 pet_type="pet",
             )
-            # 即使走了知识库模板，也要追加：产品描述、卖点、设计感约束、调性锁定
+            # 即使走了知识库模板，也要追加：产品描述、卖点、设计感约束、调性锁定、文字层约束
             # 避免旧模板只出“模特穿着图”或“白底产品图”
             additions = []
             if project.product_description:
                 additions.append(f"Product description: {project.product_description}")
             if project.product_selling_points:
                 additions.append(f"Key selling points to feature in the image: {project.product_selling_points}")
-            design_guide = build_design_guide_block(task.module_key)
+            design_guide = build_design_guide_block(task.module_key, copy=module_copy)
             if design_guide:
                 additions.append(design_guide)
             if additions:
@@ -212,6 +232,7 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
                 extra=extra,
                 product_description=project.product_description or "",
                 product_selling_points=project.product_selling_points or "",
+                copy=module_copy,
             )
     else:
         prompt = build_module_prompt(
@@ -223,6 +244,7 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
             extra=extra,
             product_description=project.product_description or "",
             product_selling_points=project.product_selling_points or "",
+            copy=module_copy,
         )
     # 注入「视觉调性锁定」：所有模块共用同一份，保证整页调性统一
     if style_lock:
@@ -343,6 +365,64 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
     task.message = "完成"
     task.finished_at = datetime.utcnow()
     db.commit()
+
+    # ---------------- 并集方案：视觉质检 + PIL 叠字生成成品图 ----------------
+    if settings.text_overlay_enabled and has_renderable_copy(task.module_key, module_copy):
+        try:
+            task.message = "合成文案"
+            task.progress = 92
+            db.commit()
+
+            # 1) 视觉质检：检查 AI 画的中文标题是否正确
+            qc_result = asyncio.run(
+                inspect_ai_text(str(dest_path), task.module_key, module_copy)
+            )
+            fix_slots = qc_result.get("fix_slots", []) if not qc_result.get("correct") else []
+            if not qc_result.get("correct") and not fix_slots:
+                fix_slots = ["title"]
+
+            # 2) PIL 叠字：把 subtitle/bullets/badge 等精确叠上；若质检失败则覆盖修正 title
+            composed_dir = dest_dir / "composed"
+            composed_dir.mkdir(parents=True, exist_ok=True)
+            composed_path = composed_dir / dest_path.name
+
+            render_overlay(
+                src_path=str(dest_path),
+                out_path=str(composed_path),
+                module_key=task.module_key,
+                copy=module_copy,
+                visual_style=project.visual_style or "",
+                fix_slots=fix_slots,
+            )
+
+            # 3) 成品图也写一条 Asset，方便前端/导出直接取
+            composed_asset = Asset(
+                project_id=project.id,
+                asset_type="composed",
+                module_key=task.module_key,
+                seq=seq,
+                language=language,
+                file_path=str(composed_path),
+                url=f"/api/files?path={composed_path}",
+                thumbnail_url=f"/api/files?path={composed_path}",
+                width=asset.width,
+                height=asset.height,
+                file_size=composed_path.stat().st_size,
+                prompt=prompt,
+                model=asset.model,
+                resolution=resolution,
+                status="success",
+            )
+            db.add(composed_asset)
+            db.commit()
+
+            # 4) 同步更新 task 指向成品图（导出/预览默认用成品）
+            task.asset_id = composed_asset.id
+            task.message = "完成（已合成文案）"
+            db.commit()
+        except Exception as e:
+            logger.warning("文案合成失败，保留原始生成图: %s", e)
+            # 保留原始 asset_id，任务仍算成功
 
     # 异步刷新组合预览缓存（不阻塞当前任务）
     try:

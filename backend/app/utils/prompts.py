@@ -1,5 +1,8 @@
 """Prompt 模板库：每个行业、每个模块都对应一份生成提示词模板。"""
-from typing import Dict, List
+from typing import Dict, List, Optional
+
+from app.config import settings
+from app.utils.text_layout import describe_ai_text, describe_clean_zones
 
 # 通用 19 大模块（对应 51aic / yilaitu 通用模块）
 COMMON_MODULES: List[Dict] = [
@@ -412,20 +415,45 @@ def build_style_lock(visual_style: str, industry: str = "") -> str:
     return block.strip()
 
 
-def build_design_guide_block(module_key: str) -> str:
-    """返回模块级设计指导文本（用于追加到已有 prompt 末尾，确保模板 prompt 也带设计感约束）。"""
+def build_design_guide_block(
+    module_key: str,
+    copy: Optional[Dict] = None,
+    ai_render_headline: Optional[bool] = None,
+) -> str:
+    """返回模块级设计指导文本（用于追加到已有 prompt 末尾，确保模板 prompt 也带设计感约束）。
+
+    copy 为该模块结构化文案；ai_render_headline 控制是否让 AI 直接画中文主标题。
+    """
     guide = MODULE_DESIGN_GUIDE.get(module_key)
     if not guide:
         return ""
-    return (
-        "\n[DESIGN ENFORCEMENT — this panel must look like a designed e-commerce detail-page section]\n"
-        f"Composition: {guide['composition']}.\n"
-        f"Visual elements: {guide['visual_elements']}.\n"
-        f"Information hierarchy: {guide['information_hierarchy']}.\n"
-        f"Mood: {guide['mood']}.\n"
-        f"Avoid: {guide['avoid']}.\n"
-        "Leave clean areas for later text overlay, but do NOT render any readable text, letters, watermarks, or logos."
-    )
+
+    ai_render = ai_render_headline if ai_render_headline is not None else settings.ai_render_headline
+    blocks: List[str] = [
+        "",
+        "[DESIGN ENFORCEMENT — this panel must look like a designed e-commerce detail-page section]",
+        f"Composition: {guide['composition']}.",
+        f"Visual elements: {guide['visual_elements']}.",
+        f"Information hierarchy: {guide['information_hierarchy']}.",
+        f"Mood: {guide['mood']}.",
+        f"Avoid: {guide['avoid']}.",
+    ]
+
+    if ai_render and copy:
+        ai_text = describe_ai_text(module_key, copy)
+        if ai_text:
+            blocks.append(ai_text)
+
+    clean_zones = describe_clean_zones(module_key)
+    if clean_zones:
+        blocks.append(clean_zones)
+    else:
+        # 没有明确 overlay 区域时，至少保留“不要画额外文字”的兜底
+        blocks.append(
+            "Do NOT render any extra readable text, letters, watermarks, or logos beyond the headline specified above."
+        )
+
+    return "\n".join(blocks)
 
 
 def build_module_prompt(
@@ -438,6 +466,8 @@ def build_module_prompt(
     product_description: str = "",
     product_selling_points: str = "",
     style_lock: str = "",
+    copy: Optional[Dict] = None,
+    ai_render_headline: Optional[bool] = None,
 ) -> str:
     """根据模块和上下文拼装一个生图 prompt。
 
@@ -445,6 +475,7 @@ def build_module_prompt(
     style_lock 为「视觉调性锁定」段落（来自 build_style_lock），由调用方统一注入，
     保证同一项目所有模块共用同一套调性规范。
     product_selling_points 来自产品分析/用户提炼，确保卖点融入每张图。
+    copy 为该模块结构化文案；ai_render_headline 控制是否让 AI 直接画中文主标题。
     """
     module = next((m for m in COMMON_MODULES if m["key"] == module_key), None)
     if not module:
@@ -460,6 +491,8 @@ def build_module_prompt(
 
     # 模块设计感指导
     guide = MODULE_DESIGN_GUIDE.get(module_key) or MODULE_DESIGN_GUIDE.get("hero")
+
+    ai_render = ai_render_headline if ai_render_headline is not None else settings.ai_render_headline
 
     base = (
         f"Product: {product_name}. "
@@ -477,16 +510,30 @@ def build_module_prompt(
         base += f"Additional: {extra}. "
 
     # 注入设计感版式与叙事约束（解决“只是模特穿着图”的问题）
-    design_block = (
-        "\n[DESIGN DIRECTION — this is a designed e-commerce panel, not a plain product photo]\n"
-        f"Composition: {guide['composition']}.\n"
-        f"Visual elements: {guide['visual_elements']}.\n"
-        f"Information hierarchy: {guide['information_hierarchy']}.\n"
-        f"Mood: {guide['mood']}.\n"
-        f"Avoid: {guide['avoid']}.\n"
-        "Leave blank areas or subtle placeholder blocks for later text overlay, but do NOT render any readable text, letters, watermarks, or logos."
-    )
-    base = (base.rstrip(". \n") + "." + design_block)
+    blocks: List[str] = [
+        "",
+        "[DESIGN DIRECTION — this is a designed e-commerce panel, not a plain product photo]",
+        f"Composition: {guide['composition']}.",
+        f"Visual elements: {guide['visual_elements']}.",
+        f"Information hierarchy: {guide['information_hierarchy']}.",
+        f"Mood: {guide['mood']}.",
+        f"Avoid: {guide['avoid']}.",
+    ]
+
+    if ai_render and copy:
+        ai_text = describe_ai_text(module_key, copy)
+        if ai_text:
+            blocks.append(ai_text)
+
+    clean_zones = describe_clean_zones(module_key)
+    if clean_zones:
+        blocks.append(clean_zones)
+    else:
+        blocks.append(
+            "Do NOT render any extra readable text, letters, watermarks, or logos beyond the headline specified above."
+        )
+
+    base = base.rstrip(". \n") + "." + "\n".join(blocks)
 
     base += "\nTechnical: sharp focus, well-lit, 8K, high detail, photorealistic."
     if style_lock:

@@ -66,6 +66,18 @@ class Settings(BaseSettings):
     text_base_url: str = "https://api.openai.com/v1"
     text_model: str = "gpt-4o-mini"
 
+    # ---- 详情页文字合成（A 层 AI 画标题 + B 层 PIL 叠信息层）----
+    # 总开关：关闭后只出纯图，不做任何文字合成
+    text_overlay_enabled: bool = True
+    # 是否让生图模型直接把中文主标题画进画面（版式融合度更高，但可能出错别字）
+    # 关闭时主标题也改由 PIL 叠加，绝对不会错字但版式融合度略低
+    ai_render_headline: bool = True
+    # 生成后用视觉模型检查 AI 画的中文是否正确；发现错字自动用 PIL 覆盖修正
+    text_qc_enabled: bool = True
+    # 中文字体路径覆盖（留空则自动探测系统字体：Windows 微软雅黑 / macOS 苹方 / Linux Noto）
+    text_overlay_font_bold: str = ""
+    text_overlay_font_regular: str = ""
+
     # ---- 通用 ----
     default_image_resolution: str = "2K"
     supported_resolutions: str = "1K,2K,4K"

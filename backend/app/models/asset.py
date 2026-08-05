@@ -14,7 +14,7 @@ class Asset(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     project_id: Mapped[str] = mapped_column(String(40), ForeignKey("projects.id", ondelete="CASCADE"))
 
-    # 类型: product_image | reference | competitor | generated
+    # 类型: product_image | reference | competitor | generated | composed
     asset_type: Mapped[str] = mapped_column(String(30), default="product_image")
     # 模块名（仅对 generated 资产有意义，如 hero / pain_point / feature）
     module_key: Mapped[str] = mapped_column(String(50), default="")

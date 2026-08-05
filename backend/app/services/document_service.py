@@ -75,11 +75,23 @@ def _read_image_b64(path: Path) -> str:
     return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii")
 
 
+def _prefer_composed_assets(assets):
+    """同一模块同序号优先取成品图（composed），避免导出时同时出现原图和成品图。"""
+    index: dict = {}
+    for a in assets:
+        if a.asset_type not in ("generated", "composed"):
+            continue
+        key = (a.module_key, a.seq)
+        if a.asset_type == "composed" or key not in index:
+            index[key] = a
+    return list(index.values())
+
+
 def _group_assets_by_module(modules: List[dict], assets) -> List[dict]:
     """组装 [{key, name_zh, desc_zh, images: [{src, caption}]}]。"""
     grouped = []
     asset_index = {}
-    for a in assets:
+    for a in _prefer_composed_assets(assets):
         asset_index.setdefault(a.module_key, []).append(a)
 
     name_map = {m["key"]: m["name_zh"] for m in _ALL_MODULE_META}
@@ -135,7 +147,7 @@ def export_docx(project, assets) -> Path:
         doc.add_paragraph(f"目标用户: {project.product_target_audience}")
 
     asset_index = {}
-    for a in assets:
+    for a in _prefer_composed_assets(assets):
         asset_index.setdefault(a.module_key, []).append(a)
 
     name_map = {m["key"]: m["name_zh"] for m in _ALL_MODULE_META}

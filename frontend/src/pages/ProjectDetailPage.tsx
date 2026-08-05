@@ -134,10 +134,11 @@ export default function ProjectDetailPage() {
 
   if (!project) return <div className="p-8 text-slate-400">加载中…</div>
 
-  const generated = assets.filter((a) => a.asset_type === 'generated')
+  const generated = assets.filter((a) => a.asset_type === 'generated' || a.asset_type === 'composed')
+  const finalAssets = preferComposed(generated)
   const productImgs = assets.filter((a) => a.asset_type === 'product_image')
   const styleRefs = assets.filter((a) => a.asset_type === 'style_reference')
-  const moduleGroups = groupByModule(generated, project.module_plan)
+  const moduleGroups = groupByModule(finalAssets, project.module_plan)
   const combinedPreviewUrl = id ? `/api/files/preview/${id}` : ''
 
   return (
@@ -164,7 +165,7 @@ export default function ProjectDetailPage() {
         <div className="flex gap-2 flex-wrap">
           <button
             className="btn-secondary"
-            disabled={generating || generated.length === 0}
+            disabled={generating || finalAssets.length === 0}
             onClick={() => setShowCombined(true)}
             title="将所有已生成图片拼合为完整详情页预览"
           >
@@ -336,7 +337,7 @@ export default function ProjectDetailPage() {
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-medium text-slate-700">详情页模块</div>
           <div className="text-xs text-slate-400">
-            {generated.length} 张已生成 / {tasks.length} 个任务
+            {finalAssets.length} 张已生成 / {tasks.length} 个任务
           </div>
         </div>
 
@@ -562,6 +563,18 @@ function ImagePreviewModal({ asset, onClose }: { asset: Asset; onClose: () => vo
       </div>
     </div>
   )
+}
+
+function preferComposed(assets: Asset[]): Asset[] {
+  const map: Record<string, Asset> = {}
+  for (const a of assets) {
+    const key = `${a.module_key}_${a.seq}`
+    // 同一模块同序号优先保留成品图（composed），否则保留生成图
+    if (a.asset_type === 'composed' || !map[key]) {
+      map[key] = a
+    }
+  }
+  return Object.values(map).sort((a, b) => a.id - b.id)
 }
 
 function groupByModule(assets: Asset[], plan: { key: string; name_zh: string; quantity?: number }[]) {

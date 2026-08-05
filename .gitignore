@@ -12,6 +12,7 @@ venv/
 node_modules/
 dist/
 .cache/
+*.tsbuildinfo
 
 # 编辑器
 .idea/

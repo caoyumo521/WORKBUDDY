@@ -31,6 +31,9 @@ class Project(Base):
     # 详情页模块规划（按顺序）
     module_plan: Mapped[list] = mapped_column(JSON, default=list)
 
+    # 每个模块的结构化文案 { module_key: { title, subtitle, bullets, badge } }
+    module_copy: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
+
     # 工作目录
     workdir: Mapped[str] = mapped_column(String(300), default="")
 
