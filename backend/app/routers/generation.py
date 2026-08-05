@@ -360,11 +360,6 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
     db.add(asset)
     db.flush()
     task.asset_id = asset.id
-    task.status = "success"
-    task.progress = 100
-    task.message = "完成"
-    task.finished_at = datetime.utcnow()
-    db.commit()
 
     # ---------------- 并集方案：视觉质检 + PIL 叠字生成成品图 ----------------
     if settings.text_overlay_enabled and has_renderable_copy(task.module_key, module_copy):
@@ -423,6 +418,14 @@ def _do_one_task(db, project: Project, task: GenerationTask, provider, language:
         except Exception as e:
             logger.warning("文案合成失败，保留原始生成图: %s", e)
             # 保留原始 asset_id，任务仍算成功
+
+    # 任务最终状态：成功（文案合成失败也保留原图，不阻断）
+    task.status = "success"
+    task.progress = 100
+    if not task.message or task.message == "保存图片":
+        task.message = "完成"
+    task.finished_at = datetime.utcnow()
+    db.commit()
 
     # 异步刷新组合预览缓存（不阻塞当前任务）
     try:
